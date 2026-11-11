@@ -1887,7 +1887,7 @@ function loadView(o, back){
   say("この記録で続ける？", "normal");
 }
 function saveCardHTML(){
-  if (!STANDALONE) return "";
+  if (!STANDALONE || SERVER) return "";  /* サーバーに自動で保存しているので、手動のセーブは出さない */
   const done = S.lastFileSave === dayStr();
   return `<section class="panel savecard"><button class="next" id="saveBtn">今日の学習を記録する（セーブ）</button>
     <span class="pnote" id="saveNote">${done ? "今日はもうセーブしたよ。勉強したら、もう一度押してね" : (S.lastFileSave ? "最後のセーブ：" + S.lastFileSave.replace(/^\d+-(\d+)-(\d+)$/,"$1月$2日") : "まだ一度もセーブしていないよ")}</span></section>`;
@@ -2274,7 +2274,7 @@ function result(){
       ${lvNow>Q.startLv?`<div class="lvup">レベルアップ！ Lv.${lvNow}</div>`:""}
       ${nw?`<div class="reveal">${miniMio(kNow,"happy")}<div class="newtag">${esc(nw.reveal||"ミオが成長した！")}<br>第${kNow+1}話「${nw.title}」</div><div class="story">${nw.story}</div></div>`:""}
       <div class="tomorrow">${tomorrowLine()}</div>
-      ${STANDALONE ? `<button class="next" id="saveBtnR" style="background:var(--mint)">今日の学習を記録する（セーブ）</button>` : ""}
+      ${STANDALONE && !SERVER ? `<button class="next" id="saveBtnR" style="background:var(--mint)">今日の学習を記録する（セーブ）</button>` : ""}
       ${gifts.map(giftHTML).join("")}
       <div class="row"><button class="next ghost" id="hm">ホームへ</button><button class="next hot" id="again">もっとやる！<small>次はXP×${fNext}${fNext>=2?"（最大）":""}</small></button></div>
     </section>`;
