@@ -848,7 +848,7 @@ async function initServer(){
       setupView(j.error === "no_key" ? "サーバーに合言葉がまだ登録されていません。もう一度設定してください。" : "合言葉がちがうみたいです。もう一度入れてください。"); return;
     } else { cloudErr = j.error || "error"; setSave(localOK ? "local" : "none"); }
   } catch(e) { cloudErr = "offline"; setSave(localOK ? "local" : "none"); }
-  if (ROLE === "family") { familyView(); return; }
+  if (ROLE === "family") { familyNotice(); return; }
   home();
 }
 function resetDevice(){
@@ -863,8 +863,8 @@ function setupView(msg){
     <label class="f">家族の合言葉（6文字以上）<input type="password" id="fk" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
     <label class="showpw"><input type="checkbox" id="fkShow"> 合言葉を表示する（打ちまちがいの確認に）</label>
     <p class="pnote" style="margin:0">いちばん最初に設定する端末で入れた合言葉が、サーバーに登録されます。2台目からは同じ合言葉を入れてください。合言葉は、サーバーには暗号にした形でしか残りません。</p>
-    <div class="f" style="font-weight:900">この端末の使い方</div>
-    <label class="chks"><label><input type="radio" name="role" value="kid" checked>${NAME}が勉強に使う</label><label><input type="radio" name="role" value="family">家族が見守るだけ（記録を見る）</label></label>
+    <input type="radio" name="role" value="kid" checked hidden>
+    <p class="pnote" style="margin:0">このアプリは${NAME}の勉強用です。保護者の方は、別の「見守りページ」（このアドレスの最後に oya.html）をお使いください。</p>
     <p class="perr" id="fErr" ${msg?"":"hidden"}>${msg?esc(msg):""}</p>
     <button class="next" id="fGo" style="margin-top:0">設定する</button></section>`;
   $("fk").oninput = ()=>{ $("fErr").hidden = true; };
@@ -883,6 +883,14 @@ function setupView(msg){
     initServer();
   };
   say("はじめに、おうちの人に設定をお願いしてね");
+}
+function familyNotice(){
+  screen = "fam";
+  view.innerHTML = `<section class="panel qcard"><span class="qlabel">保護者の方へ</span>
+    <p class="introtext">見守りは、専用の「見守りページ」に引っこしました。開くたびに${NAME}の最新の結果が見られます。</p>
+    <a class="next" href="./oya.html" style="display:block;text-align:center;text-decoration:none">見守りページを開く</a>
+    <p class="pnote">保護者専用の合言葉で開きます。この端末で${NAME}が勉強する場合は、ブラウザのこのサイトのデータを消してから、設定し直してください。</p></section>`;
+  say(`見守りページで、${NAME}のようすを見てね`, "happy");
 }
 async function familyView(){
   ROLE = "family";
@@ -1793,7 +1801,7 @@ function saveCardHTML(){
 }
 
 function home(){
-  if (ROLE === "family") { familyView(); return; }
+  if (ROLE === "family") { familyNotice(); return; }
   feverNext = 1;
   if (!S.placed) { intro(); return; }
   screen = "home";
@@ -2309,7 +2317,7 @@ function parentView(){
 (function(){
   let t = null;
   const el = $("lv");
-  const start = e => { clearTimeout(t); t = setTimeout(()=>{ t=null; parentGate(); }, 1500); };
+  const start = e => { clearTimeout(t); };  /* 見守りは oya.html に移ったので、長押しは使わない */
   const stop = () => { clearTimeout(t); t = null; };
   el.addEventListener("pointerdown", start); el.addEventListener("pointerup", stop);
   el.addEventListener("pointerleave", stop); el.addEventListener("pointercancel", stop);
