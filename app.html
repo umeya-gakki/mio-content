@@ -375,6 +375,21 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 .pgrow{display:grid;grid-template-columns:3.2em auto 1fr auto 1fr;gap:6px;align-items:center;font-weight:900}
 .pgin{font:900 18px var(--body,inherit);width:100%;min-width:0;border:2px solid var(--ink);border-radius:10px;padding:6px 8px;box-sizing:border-box}
 .askbtn.pgbtn.todo{background:linear-gradient(160deg,#fff 45%,#DDF7EE);border-color:#1E9E74}
+/* たまに起きるレア変身 */
+.mio[data-stage="cat"] .e-normal,.mio[data-stage="cat"] .e-happy,.mio[data-stage="cat"] [class^="m-"],.mio[data-stage="cat"] .brow-sad,.mio[data-stage="cat"] .sweat{display:none!important}
+.mio .ce-h,.mio .bf-h,.mio .of-h{display:none}
+.mio[data-mood="happy"] .ce-n,.mio[data-mood="happy"] .bf-n,.mio[data-mood="happy"] .of-n{display:none}
+.mio[data-mood="happy"] .ce-h,.mio[data-mood="happy"] .bf-h,.mio[data-mood="happy"] .of-h{display:inline}
+.mio[data-stage="balloon"] > :not(.st-balloon):not(.sparkle),
+.mio[data-stage="grandma"] > :not(.st-grandma):not(.bgfull):not(.sparkle),
+.mio[data-stage="officer"] > :not(.st-officer):not(.sparkle){display:none!important}
+.mio .floaty{animation:floaty 3s ease-in-out infinite;transform-box:view-box}
+@keyframes floaty{50%{transform:translateY(-10px) rotate(-2deg)}}
+.bubble .rarebadge{display:inline-block;margin-left:6px;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(90deg,#FF4F8B,#FFB020);border-radius:999px;padding:0 8px;vertical-align:2px}
+.rare-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.rare-grid .rc{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-weight:900;font-size:13px}
+.rare-grid .rc svg{height:150px;width:auto}
+.rare-grid .rc .qbox{height:150px;display:grid;place-items:center;font-size:40px;color:var(--soft)}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -387,7 +402,7 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 }
 .mio .st,.mio .bgfull{display:none}
 .mio[data-stage="1"] .st-1,.mio[data-stage="2"] .st-2,.mio[data-stage="3"] .st-3,.mio[data-stage="4"] .st-4,.mio[data-stage="5"] .st-5,.mio[data-stage="6"] .st-6,
-.mio[data-stage="robot"] .st-robot,.mio[data-stage="robot"] .bgfull,.mio[data-stage="boost"] .st-boost,.mio[data-stage="boost"] .bgfull,.mio[data-stage="abroad"] .st-abroad,.mio[data-stage="abroad"] .bgfull,.mio[data-stage="tank"] .st-tank,.mio[data-stage="tank"] .bgfull,
+.mio[data-stage="robot"] .st-robot,.mio[data-stage="robot"] .bgfull,.mio[data-stage="mecha"] .st-mecha,.mio[data-stage="mecha"] .bgfull,.mio[data-stage="cat"] .st-5,.mio[data-stage="cat"] .st-cat,.mio[data-stage="cat"] .bgfull,.mio[data-stage="balloon"] .st-balloon,.mio[data-stage="grandma"] .st-grandma,.mio[data-stage="grandma"] .bgfull,.mio[data-stage="officer"] .st-officer,.mio[data-stage="boost"] .st-boost,.mio[data-stage="boost"] .bgfull,.mio[data-stage="abroad"] .st-abroad,.mio[data-stage="abroad"] .bgfull,.mio[data-stage="tank"] .st-tank,.mio[data-stage="tank"] .bgfull,
 .mio[data-stage="4"] .bgfull,.mio[data-stage="5"] .bgfull,.mio[data-stage="6"] .bgfull{display:inline}
 .grow{display:flex;flex-direction:column;gap:6px;padding:14px 16px;text-align:left;width:100%;background:linear-gradient(160deg,#fff 55%,#EDE9FF)}
 .grow .ttl{font-family:var(--display);font-size:18px;line-height:1.3}
@@ -522,6 +537,109 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
         <circle cx="51" cy="282" r="9" fill="#FFE6DA" stroke="#1C1B33" stroke-width="2.5"/>
         <path d="M160 176 C156 162 160 152 170 150 C180 150 184 160 180 172 C178 178 166 180 160 176Z" fill="#FFE6DA" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M164 160 L176 158 M164 166 L178 164" stroke="#1C1B33" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g class="st st-mecha">
+        <path d="M44 170 L28 120 L40 116 L60 168Z M156 170 L172 120 L160 116 L140 168Z" fill="#9AA3B8" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M30 118 l-6 -14 l12 -2Z M170 118 l6 -14 l-12 -2Z" fill="#FF8A3D" stroke="#1C1B33" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="56" y="304" width="38" height="112" rx="6" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3"/>
+        <rect x="106" y="304" width="38" height="112" rx="6" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3"/>
+        <rect x="58" y="344" width="34" height="22" rx="4" fill="#2F5BD8" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="108" y="344" width="34" height="22" rx="4" fill="#2F5BD8" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M50 414 L98 414 L100 448 L46 448Z M102 414 L150 414 L154 448 L100 448Z" fill="#E5484D" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M48 282 L152 282 L146 316 L112 322 L100 312 L88 322 L54 316Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="88" y="286" width="24" height="20" rx="3" fill="#E5484D" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M46 184 C58 176 76 172 92 172 L108 172 C124 172 142 176 154 184 L150 286 L50 286Z" fill="#2F5BD8" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M66 196 L134 196 L128 248 L72 248Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="100" cy="222" r="15" fill="#5FF2E0" stroke="#1C1B33" stroke-width="3"/>
+        <circle cx="100" cy="222" r="7" fill="#fff"/>
+        <text x="100" y="270" text-anchor="middle" font-size="13" font-family="Dela Gothic One, sans-serif" fill="#FFD23F" stroke="#1C1B33" stroke-width=".8">MIO</text>
+        <path d="M44 196 C36 230 36 262 40 294 L62 296 C62 262 64 232 70 206Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M156 196 C164 230 164 262 160 294 L138 296 C138 262 136 232 130 206Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="36" y="250" width="28" height="30" rx="4" fill="#2F5BD8" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="136" y="250" width="28" height="30" rx="4" fill="#2F5BD8" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="38" y="290" width="26" height="22" rx="7" fill="#9AA3B8" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="136" y="290" width="26" height="22" rx="7" fill="#9AA3B8" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M10 180 C10 166 22 160 40 160 L66 164 L68 216 L18 216 C12 216 10 208 10 200Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M190 180 C190 166 178 160 160 160 L134 164 L132 216 L182 216 C188 216 190 208 190 200Z" fill="#F4F6FB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M14 196 L66 196 M186 196 L134 196" stroke="#E5484D" stroke-width="6"/>
+        <g fill="#9AA3B8"><circle cx="24" cy="176" r="3"/><circle cx="176" cy="176" r="3"/><circle cx="24" cy="208" r="3"/><circle cx="176" cy="208" r="3"/></g>
+      </g>
+      <g class="st st-grandma">
+        <path d="M54 296 L146 296 L156 428 L44 428Z" fill="#8A6D4E" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M62 330 L64 424 M100 300 L100 426 M138 330 L136 424" stroke="#6E5438" stroke-width="2"/>
+        <path d="M56 426 L96 426 L96 446 L52 446 Q52 432 56 426Z M104 426 L144 426 Q148 432 148 446 L104 446Z" fill="#3A2E28" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M48 306 L54 196 C58 182 76 176 92 174 L108 174 C124 176 142 182 146 196 L152 306Z" fill="#6E9B6A" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M84 176 L100 300 L116 176" fill="#FBF6EC" stroke="#1C1B33" stroke-width="2"/>
+        <path d="M84 176 C90 192 110 192 116 176" fill="none" stroke="#1C1B33" stroke-width="2"/>
+        <g fill="#F3E3B3" stroke="#1C1B33" stroke-width="1.5"><circle cx="92" cy="218" r="3.5"/><circle cx="94" cy="246" r="3.5"/><circle cx="96" cy="274" r="3.5"/></g>
+        <path d="M54 230 L60 300 M146 230 L140 300" stroke="#5B8257" stroke-width="2"/>
+        <path d="M54 198 C44 232 42 264 46 296 L62 298 C62 266 64 236 70 208Z" fill="#6E9B6A" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M146 198 C160 226 164 254 158 282 L142 280 C144 256 138 232 130 208Z" fill="#6E9B6A" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="54" cy="304" r="8" fill="#F6DCCB" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M138 272 L170 272 L166 296 L142 296Z" fill="#fff" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M170 278 q10 2 6 10 q-3 4 -8 3" fill="none" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M146 280 L162 280" stroke="#6E9B6A" stroke-width="3"/>
+        <path d="M150 266 q-3 -8 2 -14 M158 266 q-3 -8 2 -14" fill="none" stroke="#B9B6C8" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="150" cy="288" r="8" fill="#F6DCCB" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="91" y="160" width="18" height="20" fill="#F6DCCB" stroke="#1C1B33" stroke-width="3"/>
+        <circle cx="100" cy="36" r="20" fill="#ECEAF2" stroke="#1C1B33" stroke-width="3"/>
+        <path d="M84 30 q16 -8 32 0" fill="none" stroke="#C9C6D6" stroke-width="2"/>
+        <path d="M118 24 L142 10" stroke="#B5502E" stroke-width="3.5" stroke-linecap="round"/><circle cx="143" cy="9" r="4" fill="#E5484D" stroke="#1C1B33" stroke-width="1.5"/>
+        <path d="M52 104 C52 72 74 58 100 58 C126 58 148 72 148 104 C148 134 130 156 100 164 C70 156 52 134 52 104Z" fill="#F6DCCB" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M48 110 C44 70 70 48 100 48 C130 48 156 70 152 110 C146 88 132 72 112 70 C100 78 80 80 66 76 C58 84 52 94 48 110Z" fill="#ECEAF2" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M70 66 q16 -6 30 -2 M108 62 q16 0 28 10" fill="none" stroke="#C9C6D6" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M68 104 q12 -5 22 0 M110 104 q12 -5 22 0" fill="none" stroke="#B9B6C8" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M70 124 q10 -8 20 0 M110 124 q10 -8 20 0" fill="none" stroke="#1C1B33" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="80" cy="122" r="16" fill="#fff" fill-opacity=".25" stroke="#B8862B" stroke-width="2.5"/>
+        <circle cx="120" cy="122" r="16" fill="#fff" fill-opacity=".25" stroke="#B8862B" stroke-width="2.5"/>
+        <path d="M96 120 q4 -3 8 0 M64 120 L54 116 M136 120 L146 116" fill="none" stroke="#B8862B" stroke-width="2.5"/>
+        <path d="M60 128 l-6 2 M140 128 l6 2" stroke="#D8B9A6" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="68" cy="142" rx="9" ry="4.5" fill="#FF9EBB" opacity=".55"/><ellipse cx="132" cy="142" rx="9" ry="4.5" fill="#FF9EBB" opacity=".55"/>
+        <path d="M88 146 q12 10 24 0" fill="none" stroke="#1C1B33" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M84 150 q-3 3 -6 2 M116 150 q3 3 6 2" fill="none" stroke="#D8B9A6" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M146 112 q12 -4 10 12 q-2 12 -12 10" fill="#F6DCCB" stroke="#1C1B33" stroke-width="2.5"/>
+        <circle cx="152" cy="132" r="3" fill="#fff" stroke="#1C1B33" stroke-width="1.2"/>
+      </g>
+      <g class="st st-officer">
+        <path d="M58 300 L96 300 L94 410 L60 410Z M104 300 L142 300 L140 410 L106 410Z" fill="#1F2A55" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M62 304 L62 408 M138 304 L138 408" stroke="#D9A93A" stroke-width="3"/>
+        <path d="M54 404 L98 404 L100 448 L50 448 Q50 420 54 404Z M102 404 L146 404 Q150 420 150 448 L100 448Z" fill="#14141C" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M60 414 L92 414 M108 414 L140 414" stroke="#4A4A58" stroke-width="2"/>
+        <path d="M46 308 L52 196 C56 182 76 176 92 174 L108 174 C124 176 144 182 148 196 L154 308Z" fill="#26346B" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M86 176 L100 206 L114 176Z" fill="#fff" stroke="#1C1B33" stroke-width="2"/>
+        <path d="M96 182 L104 182 L102 204 L98 204Z" fill="#14141C"/>
+        <path d="M86 176 L76 226 L100 300 L124 226 L114 176" fill="none" stroke="#1C1B33" stroke-width="2.5"/>
+        <g fill="#D9A93A" stroke="#1C1B33" stroke-width="1.2"><circle cx="88" cy="236" r="3.5"/><circle cx="112" cy="236" r="3.5"/><circle cx="90" cy="258" r="3.5"/><circle cx="110" cy="258" r="3.5"/><circle cx="92" cy="280" r="3.5"/><circle cx="108" cy="280" r="3.5"/></g>
+        <rect x="46" y="290" width="108" height="14" fill="#14141C" stroke="#1C1B33" stroke-width="2.5"/>
+        <rect x="92" y="289" width="16" height="16" rx="2" fill="#D9A93A" stroke="#1C1B33" stroke-width="2"/>
+        <g stroke="#1C1B33" stroke-width="1.5"><rect x="56" y="214" width="9" height="6" fill="#E5484D"/><rect x="65" y="214" width="9" height="6" fill="#4C7DFF"/><rect x="56" y="220" width="9" height="6" fill="#FFD23F"/><rect x="65" y="220" width="9" height="6" fill="#2FA4A0"/></g>
+        <path d="M60 228 L62 238 M70 228 L68 238" stroke="#E5484D" stroke-width="2.5"/><circle cx="62" cy="242" r="5" fill="#D9A93A" stroke="#1C1B33" stroke-width="1.5"/><circle cx="68" cy="242" r="5" fill="#C3CBDC" stroke="#1C1B33" stroke-width="1.5"/>
+        <path d="M120 180 L152 300" stroke="#C9A227" stroke-width="5"/>
+        <path d="M52 198 C42 232 40 264 44 296 L60 298 C60 266 62 236 68 208Z" fill="#26346B" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M148 198 C162 222 168 248 166 270 L150 272 C150 250 142 228 132 208Z" fill="#26346B" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M44 286 L60 288 M150 262 L166 262" stroke="#D9A93A" stroke-width="3"/>
+        <circle cx="52" cy="304" r="9" fill="#fff" stroke="#1C1B33" stroke-width="2.5"/>
+        <circle cx="158" cy="278" r="9" fill="#fff" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M156 286 L176 222" stroke="#3A2E28" stroke-width="5" stroke-linecap="round"/><circle cx="177" cy="219" r="4" fill="#D9A93A" stroke="#1C1B33" stroke-width="1.5"/>
+        <path d="M30 192 C32 180 48 176 66 178 L66 196 C52 194 40 196 30 200Z" fill="#D9A93A" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M170 192 C168 180 152 176 134 178 L134 196 C148 194 160 196 170 200Z" fill="#D9A93A" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M32 200 l0 10 M38 198 l0 10 M44 197 l0 10 M50 196 l0 10 M168 200 l0 10 M162 198 l0 10 M156 197 l0 10 M150 196 l0 10" stroke="#D9A93A" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="91" y="160" width="18" height="18" fill="#F6D6BE" stroke="#1C1B33" stroke-width="3"/>
+        <path d="M52 104 C52 72 74 58 100 58 C126 58 148 72 148 104 C148 134 130 156 100 164 C70 156 52 134 52 104Z" fill="#F6D6BE" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M52 100 C52 86 54 78 58 72 L60 100Z M148 100 C148 86 146 78 142 72 L140 100Z" fill="#6B4A32" stroke="#1C1B33" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M66 104 L92 108 M108 108 L134 104" stroke="#3A2A20" stroke-width="5" stroke-linecap="round"/>
+        <g class="of-n"><ellipse cx="80" cy="120" rx="5" ry="6" fill="#1C1B33"/><ellipse cx="120" cy="120" rx="5" ry="6" fill="#1C1B33"/><circle cx="82" cy="118" r="1.6" fill="#fff"/><circle cx="122" cy="118" r="1.6" fill="#fff"/></g>
+        <g class="of-h" fill="none" stroke="#1C1B33" stroke-width="3.5" stroke-linecap="round"><path d="M72 122 q8 -8 16 0 M112 122 q8 -8 16 0"/></g>
+        <path d="M100 124 q-4 10 0 14" fill="none" stroke="#C99A80" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M100 140 C92 136 80 136 72 144 C78 140 86 142 90 146 C94 146 98 144 100 142 C102 144 106 146 110 146 C114 142 122 140 128 144 C120 136 108 136 100 140Z" fill="#6B4A32" stroke="#1C1B33" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M92 152 q8 4 16 0" fill="none" stroke="#1C1B33" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M146 112 q12 -4 10 12 q-2 12 -12 10" fill="#F6D6BE" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M44 86 C44 50 70 30 100 30 C130 30 156 50 156 86Z" fill="#26346B" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="46" y="74" width="108" height="14" fill="#14141C" stroke="#1C1B33" stroke-width="2.5"/>
+        <path d="M50 88 C66 102 134 102 150 88Z" fill="#14141C" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M58 76 L142 76" stroke="#D9A93A" stroke-width="3"/>
+        <circle cx="100" cy="56" r="13" fill="#D9A93A" stroke="#1C1B33" stroke-width="2"/>
+        <path d="M100 46 L103 53 L111 53 L105 58 L107 65 L100 61 L93 65 L95 58 L89 53 L97 53Z" fill="#fff" stroke="#1C1B33" stroke-width="1"/>
       </g>
       <g class="st st-robot">
         <rect x="58" y="300" width="34" height="128" rx="8" fill="#B8C2D6" stroke="#1C1B33" stroke-width="3"/>
@@ -708,6 +826,34 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
         <path d="M152 74 C168 70 178 78 184 90 C174 88 166 84 156 82Z" fill="#fff" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M152 78 C164 84 170 96 170 110 C162 102 158 94 154 84Z" fill="#fff" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
       </g>
+      <g class="st st-cat">
+        <path d="M56 70 L62 26 L92 54Z" fill="#7D78AE" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M144 70 L138 26 L108 54Z" fill="#7D78AE" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M64 58 L66 36 L82 52Z M136 58 L134 36 L118 52Z" fill="#FF9EBB"/>
+        <g class="ce-n">
+          <path d="M66 122 C70 110 90 110 94 122 C90 134 70 134 66 122Z" fill="#B7E36A" stroke="#1C1B33" stroke-width="2.5"/>
+          <path d="M106 122 C110 110 130 110 134 122 C130 134 110 134 106 122Z" fill="#B7E36A" stroke="#1C1B33" stroke-width="2.5"/>
+          <ellipse cx="80" cy="122" rx="2.6" ry="9" fill="#1C1B33"/><ellipse cx="120" cy="122" rx="2.6" ry="9" fill="#1C1B33"/>
+          <circle cx="76" cy="117" r="2" fill="#fff"/><circle cx="116" cy="117" r="2" fill="#fff"/>
+        </g>
+        <g class="ce-h" fill="none" stroke="#1C1B33" stroke-width="4" stroke-linecap="round"><path d="M66 124 q14 -12 28 0 M106 124 q14 -12 28 0"/></g>
+        <path d="M95 136 L105 136 L100 142Z" fill="#FF7FA8" stroke="#1C1B33" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M100 142 L100 146 M92 148 q4 4 8 -2 q4 6 8 2" fill="none" stroke="#1C1B33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M60 134 L36 128 M60 140 L34 142 M60 146 L38 154 M140 134 L164 128 M140 140 L166 142 M140 146 L162 154" stroke="#1C1B33" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g class="st st-balloon"><g class="floaty">
+        <path d="M100 236 C92 270 112 300 98 334 C86 364 110 392 100 446" fill="none" stroke="#6A6878" stroke-width="2.5"/>
+        <path d="M92 236 L108 236 L104 226 L96 226Z" fill="#FF7FA8" stroke="#1C1B33" stroke-width="2.5" stroke-linejoin="round"/>
+        <ellipse cx="100" cy="128" rx="80" ry="100" fill="#FFB3CC" stroke="#1C1B33" stroke-width="3.5"/>
+        <path d="M40 92 C44 50 76 30 100 30 C124 30 156 50 160 92 C150 74 132 64 118 66 L112 80 L104 64 L94 82 L86 64 L76 80 L68 68 C56 72 46 80 40 92Z" fill="#7D78AE" stroke="#1C1B33" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="128" y="58" width="20" height="6" rx="3" fill="#FF9EBB" stroke="#1C1B33" stroke-width="2" transform="rotate(-20 138 61)"/>
+        <rect x="130" y="68" width="18" height="5" rx="2.5" fill="#FFD23F" stroke="#1C1B33" stroke-width="2" transform="rotate(-20 139 70)"/>
+        <ellipse cx="62" cy="110" rx="10" ry="22" fill="#fff" opacity=".55" transform="rotate(20 62 110)"/>
+        <g class="bf-n"><ellipse cx="80" cy="132" rx="7" ry="9" fill="#1C1B33"/><ellipse cx="120" cy="132" rx="7" ry="9" fill="#1C1B33"/><circle cx="82" cy="129" r="2.5" fill="#fff"/><circle cx="122" cy="129" r="2.5" fill="#fff"/></g>
+        <g class="bf-h" fill="none" stroke="#1C1B33" stroke-width="4" stroke-linecap="round"><path d="M70 136 q10 -12 20 0 M110 136 q10 -12 20 0"/></g>
+        <ellipse cx="66" cy="152" rx="9" ry="5" fill="#FF7FA8" opacity=".7"/><ellipse cx="134" cy="152" rx="9" ry="5" fill="#FF7FA8" opacity=".7"/>
+        <path d="M92 156 q8 9 16 0" fill="none" stroke="#1C1B33" stroke-width="3" stroke-linecap="round"/>
+      </g></g>
       <g class="sparkle" fill="#FFD23F" stroke="#1C1B33" stroke-width="2" stroke-linejoin="round">
         <path d="M22 58 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/>
         <path d="M40 22 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3Z"/>
@@ -1074,6 +1220,7 @@ function say(text, mood="normal"){
   const stg = mio.dataset.stage;
   if (stg === "robot" && text && Math.random() < 0.5) text = text + "　ピピッ";
   if (stg === "tank" && text && Math.random() < 0.35) text = text + "　ドドドッ";
+  if (RARE[stg] && text && !/^[A-Za-z]/.test(text) && !text.includes(RARE[stg].suf.trim()) && Math.random() < RARE[stg].p) text = stg === "cat" ? text.replace(/[。！？!?…〜]*$/, m => "ニャ" + (m || "")) : text + RARE[stg].suf;
   if (stg === "abroad" && text && !/^[A-Za-z]/.test(text)) {
     const L = (ENGLISH && (ENGLISH[mood] || ENGLISH.normal)) || [{en:"Hello, KOU! Let's study!", ja:"こんにちは、KOU！ 勉強しよう！"}];
     const p = pick(L), el = $("say");
@@ -1126,6 +1273,11 @@ function greet(){
   const gap = daysSince(S.lastDay);
   const bi = boostInfo();
   if (bi && (gap === null || gap <= 1)) { say(boostLine(bi), "happy"); return; }
+  const rr = rareToday();
+  if (rr && (gap === null || gap <= 1)) { say(RARE[rr].greet, "happy"); return; }
+  const yd = new Date(); yd.setDate(yd.getDate()-1);
+  if (S.lastRare && S.lastRare.day === dayStr(yd) && (S.lastRare.look === "grandma" || S.lastRare.look === "officer") && (gap === null || gap <= 1)) {
+    say(`ただいま！ ミオ、もどってきたよ。昨日の${RARE[S.lastRare.look].name}、どうだった？`, "happy"); return; }
   if (gap === 0) { say(S.today.sessions ? `おかえり！ 今日${S.today.sessions+1}回目だね。すごい` : timeLine(), S.today.sessions?"happy":"normal"); return; }
   if (gap === null || gap === 1) { say(gap===1 && S.streak>=2 ? `${timeLine()}　今日で${S.streak+1}日連続になるよ！` : timeLine()); return; }
   say(gap === 2 ? "昨日は会えなかったね…。勉強できなかったの、ちょっとさみしかったな" : `${gap-1}日ぶりだね…。ずっと待ってたよ`, "sad");
@@ -2047,7 +2199,46 @@ function miniMio(k, mood="normal"){
   setLook(c, k);
   return c.outerHTML;
 }
-function applyStage(){ setLook(mio, stageIdx(curLv())); if (ROLE !== "family" && boostInfo()) { mio.dataset.stage = "boost"; mio.dataset.crop = "full"; mio.setAttribute("viewBox", VB.full); } }
+/* たまに起きるレア変身（アプリを開いた日に、5日に1回くらい。その日だけ）。テスト前の特訓中は起きない */
+const RARE = {
+  mecha:   {name:"巨大ロボ・ミオ", who:"ミオ", greet:"ガシャーン！ 朝起きたら、体が巨大ロボになってた！ 今日はパワー全開でいくよ", suf:"　ガシャーン", p:0.3},
+  cat:     {name:"ねこミオ", who:"ミオ", greet:"ニャ!? 顔が猫になっちゃったニャ…。今日はこのままがんばるニャ", suf:"ニャ", p:1},
+  balloon: {name:"風船ミオ", who:"ミオ", greet:"ふわ〜…ミオ、風船になっちゃった…。飛んでいかないように、問題をといて重りになって〜", suf:"　ふわ〜", p:0.35},
+  grandma: {name:"おばあちゃん先生", who:"おばあちゃん先生", greet:"ミオ先生は今日お休みでねぇ。代わりに、おばあちゃん先生が見ますよ。ゆっくりでいいからねぇ", suf:"　ほっほっほ", p:0.25},
+  officer: {name:"宇宙軍の司令官", who:"司令官", greet:"本日、ミオ先生は休暇中である！ 代理の司令官だ。本日の任務、5問！ 総員、かかれ！", suf:"　以上！", p:0.3}
+};
+function rareToday(){ const t = dayStr(); return S.surprise && S.surprise.day === t && RARE[S.surprise.look] ? S.surprise.look : null; }
+function rollRare(){
+  if (ROLE !== "kid" || (SERVER && !cloudOK)) return;
+  const t = dayStr(); if (S.surprise && S.surprise.day === t) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const prev = S.surprise && S.surprise.look ? S.surprise : null;
+  let look = null;
+  if (!boostInfo() && (S.days||0) >= 3 && !(prev && prev.day === dayStr(y)) && Math.random() < 0.2) {
+    const seen = S.rareSeen || {};
+    const pool = Object.keys(RARE).flatMap(k => seen[k] ? [k] : [k,k,k]);
+    look = pool[Math.floor(Math.random()*pool.length)];
+    S.rareSeen = Object.assign({}, seen, {[look]: seen[look] || t});
+  }
+  if (prev) S.lastRare = {day: prev.day, look: prev.look};
+  S.surprise = {day: t, look};
+  save();
+}
+function applyStage(){
+  rollRare();
+  setLook(mio, stageIdx(curLv()));
+  const r = rareToday(), b = ROLE !== "family" && boostInfo();
+  const look = b ? "boost" : r;
+  if (look) { mio.dataset.stage = look; mio.dataset.crop = "full"; mio.setAttribute("viewBox", VB.full); }
+  const nm = document.querySelector(".bubble .name");
+  if (nm) nm.innerHTML = (!b && r ? esc(RARE[r].who) + `<span class="rarebadge">${r==="grandma"||r==="officer" ? "今日だけの代わりの先生！" : "今日だけのレア変身！"}</span>` : "ミオ");
+}
+function miniLook(look, mood="normal"){
+  const c = mio.cloneNode(true);
+  c.removeAttribute("id"); c.classList.remove("bounce"); c.dataset.mood = mood;
+  c.dataset.stage = look; c.dataset.crop = "full"; c.setAttribute("viewBox", VB.full);
+  return c.outerHTML;
+}
 function album(){
   const k = stageIdx(curLv());
   view.innerHTML = `
@@ -2057,6 +2248,11 @@ function album(){
         <div><div class="no">第${i+1}話</div><div class="ttl">${g.title}</div><div class="story">${g.story}</div></div></section>` : `
       <section class="panel chap locked"><div class="qbox">？</div>
         <div><div class="no">第${i+1}話</div><div class="ttl">？？？</div><div class="story">Lv.${g.lv}で読めるよ</div></div></section>`).join("")}</div>
+    <section class="panel diary"><h2>レア変身図鑑 <span style="font-size:14px">${Object.keys(S.rareSeen||{}).length} / ${Object.keys(RARE).length}</span></h2>
+      <p class="pnote" style="margin:0 0 8px">たまに、アプリを開いた日にだけ起きる変身。全部見られるかな？</p>
+      <div class="rare-grid">${Object.keys(RARE).map(k => (S.rareSeen||{})[k]
+        ? `<div class="rc">${miniLook(k, "happy")}<span>${esc(RARE[k].name)}</span><span class="pnote" style="margin:0">${esc(String(S.rareSeen[k]).replace(/^\d+-(\d+)-(\d+)$/,"$1月$2日"))}</span></div>`
+        : `<div class="rc"><div class="qbox">？</div><span>？？？</span></div>`).join("")}</div></section>
     <section class="panel diary"><h2>ミオの日記</h2><ol>${ownedItems().reverse().map(x=>`<li><span>${x.at}</span>${x.ep}</li>`).join("")}</ol></section>`;
   $("back").onclick = home;
   say(k < GROW.length-1 ? "わたしの成長、KOUちゃんのXPしだいなんだ。続き、見たい？" : "ここまで連れてきてくれて、ほんとにありがと。");
