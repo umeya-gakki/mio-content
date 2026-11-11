@@ -372,6 +372,9 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 .pkind,.psubj{display:flex;flex-wrap:wrap;gap:6px}
 .shots{display:flex;flex-wrap:wrap;gap:6px}
 .shots img{width:30%;max-width:120px;aspect-ratio:3/4;object-fit:cover;border:2px solid var(--ink);border-radius:8px}
+.pgrow{display:grid;grid-template-columns:3.2em auto 1fr auto 1fr;gap:6px;align-items:center;font-weight:900}
+.pgin{font:900 18px var(--body,inherit);width:100%;min-width:0;border:2px solid var(--ink);border-radius:10px;padding:6px 8px;box-sizing:border-box}
+.askbtn.pgbtn.todo{background:linear-gradient(160deg,#fff 45%,#DDF7EE);border-color:#1E9E74}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -716,7 +719,7 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
   <div id="saveWarn" class="savewarn" role="alert" hidden></div>
   <main id="view" class="wrap" style="gap:16px"></main>
 
-  <p class="foot">問題は11月時点の中学2年の一般的な進度から予想したものです。教科書（NEW HORIZON・ONE WORLD・光村図書など）によって順番が前後します。</p>
+  <p class="foot">問題はKOUちゃんの教科書（NEW HORIZON 2・新しい数学2・光村図書 国語2）に合わせて、ミオ先生が毎日少しずつ直しています。</p>
 </div>
 
 <script>
@@ -900,6 +903,44 @@ async function shrinkPhoto(file){
     while (data.length > 1200000 && q > 0.4) { q -= 0.12; data = cv.toDataURL("image/jpeg", q); }
     return {b64: data.split(",")[1], preview: data};
   } finally { URL.revokeObjectURL(url); }
+}
+/* 今日習った教科書のページをミオに教える（記録の log[日].pg に入る。見守りと「ミオの作戦」でテスト予想に使う） */
+function pageView(){
+  screen = "pages";
+  const d = dayStr(); S.log = S.log || {};
+  const cur = (S.log[d] && S.log[d].pg) || {};
+  const box = (k, i, v) => `<input type="number" inputmode="numeric" min="1" max="400" class="pgin" id="pg-${k}-${i}" value="${v||""}" placeholder="${i?"まで":"から"}">`;
+  view.innerHTML = `<section class="panel qcard form"><span class="qlabel">今日習ったページ</span>
+    <p class="introtext">今日の授業で習った教科書のページを教えてね。わかる教科だけでOK！</p>
+    ${SUBJ_ORDER.map(k=>{ const v = cur[k] || []; return `<div class="pgrow"><b>${SUBJECTS[k].name}</b><span>p.</span>${box(k,0,v[0])}<span>〜</span>${box(k,1,v[1])}</div>`; }).join("")}
+    <p class="pnote">1ページだけなら、左だけでいいよ。わからなければ、教科書のページを写真で送ってもOK。</p>
+    <p class="perr" id="pgErr" hidden></p>
+    <button class="next" id="pgSave">ミオに教える</button>
+    <button class="next ghost" id="pgPhoto">写真で送る</button>
+    <button class="next ghost" id="pgBack">もどる</button></section>`;
+  $("pgBack").onclick = home; $("pgPhoto").onclick = photoView;
+  $("pgSave").onclick = () => {
+    const pg = {};
+    for (const k of SUBJ_ORDER) {
+      const a = parseInt($("pg-"+k+"-0").value, 10), b = parseInt($("pg-"+k+"-1").value, 10);
+      if (!a && !b) continue;
+      const x = a || b, y = b && a ? b : null;
+      if (x < 1 || x > 400 || (y && (y < x || y - x > 40))) { $("pgErr").textContent = SUBJECTS[k].name + "のページを見直してね"; $("pgErr").hidden = false; return; }
+      pg[k] = y ? [x, y] : [x];
+    }
+    if (!Object.keys(pg).length) { $("pgErr").textContent = "1教科だけでも教えてね"; $("pgErr").hidden = false; return; }
+    const L = S.log[d] = S.log[d] || {n:0, ok:0, s:{}, st:{}};
+    const first = !L.pg; L.pg = pg;
+    const gain = first ? 10 : 0; if (gain) S.xp += gain;
+    save();
+    view.innerHTML = `<section class="panel qcard"><span class="qlabel">今日習ったページ</span>
+      <h2 style="margin:6px 0">ありがとう！</h2>${gain ? `<div class="feverline">+${gain} XP</div>` : ""}
+      <p class="introtext">${Object.keys(pg).map(k=>`${SUBJECTS[k].name} p.${pg[k].join("〜")}`).join("、")}<br>今夜ミオ先生が、ここからテストに出そうなところを考えて、明日の問題に入れておくね。</p>
+      <button class="next" id="pgDone">ホームへ</button></section>`;
+    say("教えてくれてありがとう！ テストに出そうなところ、ミオがしっかり予想するね", "happy");
+    $("pgDone").onclick = home;
+  };
+  say("今日はどこまで進んだ？ ミオに教えて！", "happy");
 }
 function photoView(){
   screen = "photo";
@@ -1889,6 +1930,8 @@ function home(){
         <div class="items">${it.map((x,i)=>`<div class="item ${i===it.length-1?'new':''}">${iconSvg(x.icon)}<span>${x.name}</span></div>`).join("")}</div>
         <div class="hint">${nl?`Lv.${nl}になると、ミオの机に何かが増えるよ`:"ミオの机がいっぱいになったよ！"}${S.streak<30?"　毎日続けると、特別なものも…？":""}</div></section>`; })()}
     ${STANDALONE ? "" : `<button class="panel askbtn" id="askBtn"><span class="q">？</span><span><b>ミオ先生に質問</b><br><span>わからないところを、文字や写真で聞けるよ</span></span></button>`}
+    ${SERVER && ROLE === "kid" ? (()=>{ const pg = (S.log && S.log[dayStr()] && S.log[dayStr()].pg) || null; const n = pg ? Object.keys(pg).length : 0;
+      return `<button class="panel askbtn pgbtn ${n?"":"todo"}" id="pageBtn"><span class="q">📖</span><span><b>今日習ったページをミオに教える</b><br><span>${n ? `今日は${n}教科教えてくれたよ。ありがとう！` : "ミオがテストに出るところを予想するよ"}</span></span></button>`; })() : ""}
     ${SERVER && ROLE === "kid" ? `<button class="panel askbtn" id="photoBtn"><span class="q">📷</span><span><b>ミオ先生に写真を送る</b><br><span>なんでも見せてね</span></span></button>` : ""}
     ${wrongN ? `<button class="panel review" id="rev"><span><b>まちがい復習</b><br><span>前にまちがえた問題にリベンジ！</span></span><span class="count">${wrongN}</span></button>` : ""}
   `;
@@ -1897,6 +1940,7 @@ function home(){
   view.querySelectorAll(".subj").forEach(b=>b.onclick=()=>stageMap(b.dataset.s));
   if ($("askBtn")) $("askBtn").onclick = ()=>askView();
   if ($("photoBtn")) $("photoBtn").onclick = ()=>photoView();
+  if ($("pageBtn")) $("pageBtn").onclick = ()=>pageView();
   $("todayBtn").onclick = gachaStart;
   bindWeakCard();
   bindTestCard();

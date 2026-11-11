@@ -187,7 +187,7 @@ function render(){
   const tests = (d.tests||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   const nextT = tests.find(t => daysUntil(t.date) >= 0);
   const notes = R.notes || [];
-  const sections = [["today","きょう"],["coach","Claudeのコメント"],["test","テスト"],["days","2週間"],["bal","5教科"],["units","単元"],["miss","まちがい"],["photo","写真"],["mio","ミオ"],["more","その他"]];
+  const sections = [["today","きょう"],["coach","Claudeのコメント"],["prog","授業の進み"],["test","テスト"],["days","2週間"],["bal","5教科"],["units","単元"],["miss","まちがい"],["photo","写真"],["mio","ミオ"],["more","その他"]];
 
   let h = `<header class="top"><div class="tt"><div><h1>${NAME}の見守り</h1><div class="upd">最後に記録が届いた時刻：${esc(rel(R.savedAt))}</div></div><button class="btn" id="reload">最新にする</button></div>
     <nav class="chips">${sections.map(([id,t])=>`<a href="#${id}">${t}</a>`).join("")}</nav></header>`;
@@ -207,6 +207,7 @@ function render(){
     </div>
     ${studied && today.s ? `<h3>きょうの教科</h3>` + ORDER.filter(k=>today.s[k]).map(k=>{ const [n,ok]=today.s[k]; const p=pct(ok,n);
       return `<div class="row"><span class="nm">${sDot(k)}${sName(k)}</span><span class="bar"><i style="width:${p}%;background:${accColor(p)}"></i></span><span class="v">${ok}/${n}問 ${p}%</span></div>`; }).join("") : ""}
+    ${today && today.pg ? `<h3>きょう学校で習ったページ（${NAME}が入力）</h3><p>${ORDER.filter(k=>today.pg[k]).map(k=>`${sDot(k)}${sName(k)} p.${today.pg[k].join("〜")}`).join("　")}</p>` : `<p class="muted">きょう学校で習ったページは、まだ教えてもらっていません。</p>`}
     ${studied && today.st ? `<p class="muted">きょう取り組んだ単元：${Object.keys(today.st).filter(k=>k!=="pt").map(k=>esc(stName(k))).join("、")}</p>` : ""}
   </section>`;
 
@@ -248,6 +249,12 @@ function render(){
       </table></div><p class="muted">緑・赤の数字は平均点との差です。</p>`;
   }
   h += `<section class="card" id="test"><h2>テスト</h2>${th}</section>`;
+
+  /* ---- 授業の進み（教えてもらったページ） ---- */
+  const pgDays = []; for (let i=0;i<30;i++){ const dt=daysAgo(i), L=log[dayStr(dt)]; if (L && L.pg) pgDays.push([dt, L.pg]); }
+  th = pgDays.length ? `<div class="tblwrap"><table><tr><th>日</th>${ORDER.map(k=>`<th>${sName(k)}</th>`).join("")}</tr>${pgDays.map(([dt,pg])=>`<tr><td>${dt.getMonth()+1}/${dt.getDate()}</td>${ORDER.map(k=>`<td class="n">${pg[k]?pg[k].join("〜"):"—"}</td>`).join("")}</tr>`).join("")}</table></div><p class="muted">数字は教科書のページ。毎晩、Claudeがこのページから今の単元とテストに出そうなところを考え、「ミオの作戦」に入れます。</p>`
+    : `<p class="muted">まだありません。${NAME}のアプリの「今日習ったページをミオに教える」から入力できます。</p>`;
+  h = h.replace('<section class="card" id="test">', `<section class="card" id="prog"><h2>授業の進み <small>${NAME}が教えてくれたページ（30日間）</small></h2>${th}</section><section class="card" id="test">`);
 
   /* ---- この2週間 ---- */
   const W = 400, H = 200, padL = 26, padB = 34, bw = (W-padL-8)/14;
