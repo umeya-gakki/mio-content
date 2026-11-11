@@ -369,6 +369,9 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 .nobi .bar i{display:block;height:100%;background:var(--mint)}
 .nobi .up{color:#E5484D;font-size:12px}
 .nobi ul{margin:4px 0 0;padding-left:1.2em;font-size:14px;line-height:1.7}
+.pkind,.psubj{display:flex;flex-wrap:wrap;gap:6px}
+.shots{display:flex;flex-wrap:wrap;gap:6px}
+.shots img{width:30%;max-width:120px;aspect-ratio:3/4;object-fit:cover;border:2px solid var(--ink);border-radius:8px}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -883,6 +886,55 @@ function setupView(msg){
     initServer();
   };
   say("はじめに、おうちの人に設定をお願いしてね");
+}
+/* ミオ先生に写真を送る（教科書の表紙・テストの答案）
+   写真は小さくしてから送る。サーバーの外から見えない場所に保存し、ミオ先生（Claude）が毎晩読む */
+async function shrinkPhoto(file){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, ng)=>{ const im = new Image(); im.onload = ()=>ok(im); im.onerror = ng; im.src = url; });
+    const max = 1600, r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.createElement("canvas"); cv.width = Math.round(img.naturalWidth*r); cv.height = Math.round(img.naturalHeight*r);
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    let q = 0.82, data = cv.toDataURL("image/jpeg", q);
+    while (data.length > 1200000 && q > 0.4) { q -= 0.12; data = cv.toDataURL("image/jpeg", q); }
+    return {b64: data.split(",")[1], preview: data};
+  } finally { URL.revokeObjectURL(url); }
+}
+function photoView(){
+  screen = "photo";
+  let shots = [];
+  const draw = () => {
+    view.innerHTML = `<section class="panel qcard form"><span class="qlabel">ミオ先生に写真を送る</span>
+      <label class="next" style="display:block;text-align:center;cursor:pointer">📷 写真をとる・えらぶ<input type="file" id="pf" accept="image/*" multiple hidden></label>
+      ${shots.length ? `<div class="shots">${shots.map(x=>`<img src="${x.preview}" alt="">`).join("")}</div>` : ""}
+      <p class="perr" id="pErr" hidden></p>
+      ${shots.length ? `<button class="next" id="pSend">${shots.length}枚を送る</button>` : ""}
+      <button class="next ghost" id="pBack">もどる</button></section>`;
+    $("pBack").onclick = home;
+    $("pf").onchange = async e => {
+      const fs = [...e.target.files].slice(0, 6 - shots.length);
+      for (const f of fs) { try { shots.push(await shrinkPhoto(f)); } catch(err) {} }
+      draw();
+    };
+    if ($("pSend")) $("pSend").onclick = async () => {
+      $("pSend").disabled = true; $("pSend").textContent = "送っています…";
+      let sent = 0, err = "";
+      for (const x of shots) { const j = await api("photo", {jpeg: x.b64, kind: "other"}).catch(()=>({ok:false, error:"offline"})); if (j.ok) sent++; else err = j.error; }
+      if (!sent) { $("pErr").textContent = err==="offline" ? "送れなかった…電波のよいところで、もう一度ためしてね" : "送れなかった…（" + err + "）"; $("pErr").hidden = false; $("pSend").disabled = false; $("pSend").textContent = shots.length + "枚を送る"; return; }
+      const gain = !(S.photoDays||[]).includes(dayStr()) ? 20 : 0;
+      if (gain) { S.photoDays = (S.photoDays||[]).concat(dayStr()).slice(-60); S.xp += gain; save(); }
+      view.innerHTML = `<section class="panel qcard"><span class="qlabel">ミオ先生に写真を送る</span>
+        <h2 style="margin:6px 0">${sent}枚、とどいたよ！</h2>
+        ${gain ? `<div class="feverline">写真ボーナス +${gain} XP</div>` : ""}
+        <p class="introtext">見せてくれてありがとう！ 今夜ミオ先生がじっくり見ておくね。</p>
+        <button class="next" id="pDone">ホームへ</button></section>`;
+      say("写真、ちゃんととどいたよ！ ありがとう", "happy");
+      $("pDone").onclick = home;
+    };
+  };
+  draw();
+  say("見せたいもの、なんでも送ってね", "happy");
 }
 function familyNotice(){
   screen = "fam";
@@ -1837,12 +1889,14 @@ function home(){
         <div class="items">${it.map((x,i)=>`<div class="item ${i===it.length-1?'new':''}">${iconSvg(x.icon)}<span>${x.name}</span></div>`).join("")}</div>
         <div class="hint">${nl?`Lv.${nl}になると、ミオの机に何かが増えるよ`:"ミオの机がいっぱいになったよ！"}${S.streak<30?"　毎日続けると、特別なものも…？":""}</div></section>`; })()}
     ${STANDALONE ? "" : `<button class="panel askbtn" id="askBtn"><span class="q">？</span><span><b>ミオ先生に質問</b><br><span>わからないところを、文字や写真で聞けるよ</span></span></button>`}
+    ${SERVER && ROLE === "kid" ? `<button class="panel askbtn" id="photoBtn"><span class="q">📷</span><span><b>ミオ先生に写真を送る</b><br><span>なんでも見せてね</span></span></button>` : ""}
     ${wrongN ? `<button class="panel review" id="rev"><span><b>まちがい復習</b><br><span>前にまちがえた問題にリベンジ！</span></span><span class="count">${wrongN}</span></button>` : ""}
   `;
   view.insertAdjacentHTML("beforeend", `<button class="wpbtn" id="wallBtn">壁紙をかえる</button>`);
   $("wallBtn").onclick = wallView;
   view.querySelectorAll(".subj").forEach(b=>b.onclick=()=>stageMap(b.dataset.s));
   if ($("askBtn")) $("askBtn").onclick = ()=>askView();
+  if ($("photoBtn")) $("photoBtn").onclick = ()=>photoView();
   $("todayBtn").onclick = gachaStart;
   bindWeakCard();
   bindTestCard();

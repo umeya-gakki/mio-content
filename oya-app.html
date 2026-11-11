@@ -87,6 +87,10 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kv:last-child{border-bottom:none}
 .kv b{font-weight:900}
 .help p{margin:0 0 6px}
+.phs{display:flex;flex-direction:column;gap:10px}
+.ph{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start;font-size:14px}
+.ph img{width:120px;border-radius:10px;border:1.5px solid var(--line)}
+.phimg{width:120px;aspect-ratio:3/4;border-radius:10px;border:1.5px dashed var(--line);background:var(--bg);color:var(--soft);font:900 12px var(--font);cursor:pointer}
 </style></head><body>
 <div class="wrap" id="app"><p class="muted" style="margin-top:30vh;text-align:center">読み込み中…</p></div>
 <script>
@@ -183,7 +187,7 @@ function render(){
   const tests = (d.tests||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   const nextT = tests.find(t => daysUntil(t.date) >= 0);
   const notes = R.notes || [];
-  const sections = [["today","きょう"],["coach","Claudeのコメント"],["test","テスト"],["days","2週間"],["bal","5教科"],["units","単元"],["miss","まちがい"],["mio","ミオ"],["more","その他"]];
+  const sections = [["today","きょう"],["coach","Claudeのコメント"],["test","テスト"],["days","2週間"],["bal","5教科"],["units","単元"],["miss","まちがい"],["photo","写真"],["mio","ミオ"],["more","その他"]];
 
   let h = `<header class="top"><div class="tt"><div><h1>${NAME}の見守り</h1><div class="upd">最後に記録が届いた時刻：${esc(rel(R.savedAt))}</div></div><button class="btn" id="reload">最新にする</button></div>
     <nav class="chips">${sections.map(([id,t])=>`<a href="#${id}">${t}</a>`).join("")}</nav></header>`;
@@ -282,6 +286,15 @@ function render(){
   h += `<section class="card" id="miss"><h2>最近まちがえた問題 <small>新しい順・最大60問</small></h2>
     <div class="filters" id="mf"><button data-k="all" class="on">すべて</button>${ORDER.map(k=>`<button data-k="${k}">${sName(k)}</button>`).join("")}</div><div id="mlist" style="display:flex;flex-direction:column;gap:8px"></div></section>`;
 
+  /* ---- 写真 ---- */
+  const phs = R.photos || [];
+  const KN = {cover:"教科書の表紙", answer:"テストの答案", other:"そのほか"};
+  h += `<section class="card" id="photo"><h2>${NAME}が送った写真 <small>新しい順</small></h2>
+    ${phs.length ? `<div class="phs">${phs.map(p=>`<div class="ph"><button class="phimg" data-f="${esc(p.file)}">写真を見る</button>
+      <div><b>${esc(KN[p.kind]||p.kind)}${p.subj?`・${esc(sName(p.subj))}`:""}</b><br><span class="muted">${esc(rel(p.at))}</span>
+      <br>${p.seen ? `<span class="pill ok">Claudeが確認済み</span>${p.memo?`<br><span class="muted">${esc(p.memo)}</span>`:""}` : `<span class="pill warn">今夜Claudeが見ます</span>`}</div></div>`).join("")}</div>`
+      : `<p class="muted">まだ写真はありません。${NAME}のアプリの「ミオ先生に写真を送る」から送れます。</p>`}</section>`;
+
   /* ---- ミオ ---- */
   const toNext = gn ? xpForLevel(gn.lv) - (d.xp||0) : null;
   h += `<section class="card" id="mio"><h2>ミオの成長</h2>
@@ -332,6 +345,9 @@ function render(){
   document.querySelectorAll("#uf button").forEach(b=>b.onclick=()=>{ document.querySelectorAll("#uf button").forEach(x=>x.classList.toggle("on", x===b)); renderUnits(b.dataset.k); });
   document.querySelectorAll("#mf button").forEach(b=>b.onclick=()=>{ MISS_FILTER=b.dataset.k; document.querySelectorAll("#mf button").forEach(x=>x.classList.toggle("on", x===b)); renderMiss(); });
   renderUnits(ORDER[0]); renderMiss();
+  document.querySelectorAll(".phimg").forEach(b=>b.onclick=async()=>{ b.textContent="読み込み中…"; b.disabled=true;
+    const j = await api("pphoto", {pkey: getPK(), file: b.dataset.f}).catch(()=>({ok:false}));
+    if (j.ok) { const im = document.createElement("img"); im.src = "data:image/jpeg;base64," + j.jpeg; im.alt = "送られた写真"; b.replaceWith(im); } else { b.textContent = "読み込めませんでした"; } });
 }
 start();
 </script></body></html>
