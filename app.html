@@ -390,6 +390,14 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 .rare-grid .rc{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-weight:900;font-size:13px}
 .rare-grid .rc svg{height:150px;width:auto}
 .rare-grid .rc .qbox{height:150px;display:grid;place-items:center;font-size:40px;color:var(--soft)}
+.today .total{display:flex;flex-direction:column;gap:3px;margin-top:4px;font-size:13px;font-weight:700}
+.today .total b{font-size:15px}
+.today .total .tq{font-family:var(--display);font-size:20px;color:var(--pink)}
+.today .total .tbar{display:block;height:8px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff;max-width:220px}
+.today .total .tbar i{display:block;height:100%;background:var(--pink)}
+.today .total small{color:var(--soft)}
+.msline{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:3px solid var(--ink);border-radius:14px;background:linear-gradient(90deg,#FFE27A,#FFB3CC);font-weight:900}
+.msline b{font-family:var(--display);font-size:20px}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -1890,6 +1898,11 @@ ${miss || "なし"}
 
 /* ---------- 今日の1回：ガチャで決まるミックス問題 ---------- */
 /* 今週（今日をふくむ7日間）に解いた数：教科ごと */
+/* これまでに解いた問題の合計（記録の毎日の数を足す）と、次の節目 */
+const MILESTONES = [50,100,200,300,400,500,750,1000,1250,1500,2000,2500,3000,4000,5000,6000,7000,8000,10000];
+function totalSolved(){ let t = 0; const L = S.log || {}; for (const k in L) t += (L[k] && L[k].n) || 0; return t; }
+function nextMilestone(t){ return MILESTONES.find(m => m > t) || (Math.floor(t/1000)+1)*1000; }
+function prevMilestone(t){ let p = 0; for (const m of MILESTONES) if (m <= t) p = m; return p; }
 function weekBySubj(){
   const log = S.log || {}, c = {}; SUBJ_ORDER.forEach(k=>c[k]=0);
   for (let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); const L=log[dayStr(d)]; if (!L||!L.s) continue;
@@ -2060,7 +2073,9 @@ function home(){
     <button class="startbtn" id="todayBtn"><b>今日の1回 スタート！</b><span>ガチャで、5教科から1問ずつ、今日の5問がきまるよ</span></button>
     <section class="panel today">
       <div class="goal"><h2>今日のミッション</h2><small>1回5問 × 3回クリアでミッション達成</small>
-        <div class="dots">${[0,1,2].map(i=>`<span class="${i<sessions?'on':''}"></span>`).join("")}</div><small>これまで ${S.days||0}日 勉強したよ</small></div>
+        <div class="dots">${[0,1,2].map(i=>`<span class="${i<sessions?'on':''}"></span>`).join("")}</div>${(()=>{ const t = totalSolved(), nx = nextMilestone(t), pv = prevMilestone(t);
+          return `<div class="total"><span>これまで <b>${S.days||0}</b>日・<b class="tq">${t.toLocaleString()}</b>問 解いたよ</span>
+            <span class="tbar"><i style="width:${Math.round((t-pv)/(nx-pv)*100)}%"></i></span><small>あと ${nx-t}問で ${nx.toLocaleString()}問！</small></div>`; })()}</div>
       <div style="text-align:right"><small>今日の正答率</small><div class="acc">${acc}</div><small>${S.today.n}問</small></div>
     </section>
     <div class="subjects">${SUBJ_ORDER.map(k=>`<button class="panel subj" data-s="${k}" style="--c:${SUBJ_STYLE[k].c};--t:${SUBJ_STYLE[k].t}"><span class="big">${SUBJECTS[k].name}</span><span>${SUBJ_STYLE[k].d}</span><span class="meta">${sub(k)}</span>${wk[k]===minWk && maxWk-minWk>=5 ? `<span class="wkbadge">今週まだ少なめ</span>` : ""}</button>`).join("")}</div>
@@ -2264,7 +2279,7 @@ const feverFor = n => n>=3 ? 2 : n===2 ? 1.5 : n===1 ? 1.2 : 1;
 let Q = null;
 function startQuiz(list, stage){
   const _bi = boostInfo();
-  Q = {list, stage, i:0, results:[], combo:0, xp:0, startLv: levelInfo(S.xp).lv, fever: feverNext, boostX: _bi && _bi.phase === "peak" ? 1.5 : 1,
+  Q = {list, stage, i:0, results:[], combo:0, xp:0, startLv: levelInfo(S.xp).lv, startTotal: totalSolved(), fever: feverNext, boostX: _bi && _bi.phase === "peak" ? 1.5 : 1,
        rev: new Set(list.filter(q=>S.wrong[q.id]).map(q=>q.id))};
   const rn = Q.rev.size;
   say(stage ? (rn ? `「${stage.t}」スタート！前にまちがえた問題も${rn}問まぜたよ。リベンジしよう！` : `「${stage.t}」スタート！ ${stage.tip}`) : "復習モード！前の自分にリベンジだ！");
@@ -2437,6 +2452,10 @@ function result(){
   RUN.n = (Q.fever>1 && Date.now()-RUN.last < 10*60*1000) ? RUN.n + 1 : 1; RUN.last = Date.now();
   const fNext = feverFor(RUN.n);
   feverNext = 1;
+  let msHTML = "", msHit = 0;
+  { const now = totalSolved(); const hit = MILESTONES.filter(m => m > (Q.startTotal||0) && m <= now).pop();
+    if (hit && !(S.msDone||[]).includes(hit)) { msHit = hit; S.msDone = (S.msDone||[]).concat(hit); S.xp += 30; save();
+      msHTML = `<div class="msline"><b>通算 ${hit.toLocaleString()}問 達成！</b><span>ここまで全部、${NAME}が自分で解いた問題だよ。記念ボーナス +30 XP</span></div>`; } }
   let mockHTML = "";
   if (Q.mode === "mock") {
     const bi = boostInfo(), res = {}, missSet = new Set();
@@ -2465,6 +2484,7 @@ function result(){
       <div class="gain">もらったXP <b>+${Q.xp+bonus}</b>${bonus?`（星ボーナス +${bonus}）`:""}</div>
       ${Q.fever>1?`<div class="feverline">フィーバー×${Q.fever} 発動中！</div>`:""}
       ${Q.boostX>1?`<div class="feverline">特訓ボーナス XP×1.5</div>`:""}
+      ${msHTML}
       ${mockHTML}
       ${revAll?`<div class="gain">リベンジ成功 <b>${revOk} / ${revAll}</b></div>`:""}
       ${lvNow>Q.startLv?`<div class="lvup">レベルアップ！ Lv.${lvNow}</div>`:""}
@@ -2479,7 +2499,8 @@ function result(){
   const st = Q.stage;
   const wasMix = Q.mode === "mix", wasBoost = Q.mode === "mock" || Q.mode === "boost";
   $("again").onclick = ()=>{ feverNext = fNext; st ? startQuiz(buildSession(st), st) : wasBoost ? boostSession() : wasMix ? gachaStart() : (Object.keys(S.wrong).length? startReview() : (feverNext=1, home())); };
-  if (STANDALONE && S.lastFileSave !== dayStr() && !nw && !gifts.length) { say("今日の分、セーブしておこうね。下の緑のボタンだよ", "normal"); return; }
+  if (STANDALONE && !SERVER && S.lastFileSave !== dayStr() && !nw && !gifts.length) { say("今日の分、セーブしておこうね。下の緑のボタンだよ", "normal"); return; }
+  if (msHit) { say(`すごい！ これで通算${msHit.toLocaleString()}問！ 最初の日から、ここまで来たんだよ。ミオ、ちゃんと全部見てたからね`, "happy"); return; }
   if (Q.mode === "mock") { say(Q.mockKind==="final" ? "伸びたところ、ちゃんと出てるよ！ 残りの伸びしろを、あと少しだけ特訓しよう" : "おつかれさま！ できなかったところは、点数が上がる場所。ここから特訓していこう", "happy"); return; }
   const _b2 = boostInfo(); if (_b2 && _b2.phase === "eve" && Q.mode !== "mock") { say(`がんばったね、${NAME}！ ほんとうにがんばったよ。今日はここまでで十分。明日のために、早めに寝ようね`, "happy"); return; }
   if (RUN.n >= 5) { say("すごい集中力！ でも、目と頭の休けいも大事だよ。ちょっと休んでからでもいいからね", "happy"); return; }

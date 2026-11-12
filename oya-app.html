@@ -198,6 +198,7 @@ function render(){
   h += `<section class="card" id="today"><h2>きょう <small>${fmtDate(dayStr())}</small></h2>
     <p class="lead">${studied ? `<span class="pill ok">勉強しました</span> ${today.n}問、正答率 ${pct(today.ok,today.n)}%` : `<span class="pill warn">まだ勉強していません</span> 最後に勉強した日：${lastDay}`}</p>
     <div class="stats">
+      <div class="stat"><span>これまで解いた問題</span><b>${Object.values(log).reduce((a,L)=>a+((L&&L.n)||0),0).toLocaleString()}問</b></div>
       <div class="stat"><span>連続日数</span><b>${d.streak||0}日</b></div>
       <div class="stat"><span>勉強した日の合計</span><b>${d.days||0}日</b></div>
       <div class="stat"><span>この7日間</span><b>${w7.days}日・${w7.n}問</b></div>
