@@ -419,6 +419,9 @@ html.wlock body{position:fixed;left:0;right:0}
 .korder .kstroke{width:min(42vw,170px);height:auto;background:#FFFDF7;border:2px solid var(--ink);border-radius:10px}
 .korder .kmsg{font-weight:900;font-size:14px;background:#FFF2C4;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;line-height:1.6}
 .korder .kmsg.ok{background:#DDF7EE}
+.kquiz{display:flex;justify-content:center;margin:8px 0}
+.kquiz .kq{width:min(60vw,220px);height:auto;background:#FFFDF7;border:3px solid var(--ink);border-radius:12px}
+.kquiz .kbig{font-size:120px;line-height:1;font-weight:900}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -2367,7 +2370,7 @@ function normAns(t, subj){
 }
 function showQ(){
   const q = Q.list[Q.i];
-  const type = q.type || "choice";
+  const type = (q.type && q.type !== "stroke" ? q.type : "choice");
   const isEn = q.subj==="en";
   const qhtml = q.q.replace("<u></u>", '<span class="blank">？</span>');
   const typeLabel = { input:"書いて答える", order:"ならべかえ", write:"手で書く" }[type];
@@ -2396,6 +2399,7 @@ function showQ(){
       <span class="qlabel">${SUBJECTS[q.subj]?SUBJECTS[q.subj].name:"学力テスト"}｜${q.stage.t}</span>${typeLabel?`<span class="typetag">${typeLabel}</span>`:""}${Q.rev.has(q.id)?'<span class="revtag">リベンジ問題</span>':''}
       <div class="qtext"><span class="${isEn&&q.q.includes('<u>')?'en':''}">${qhtml}</span></div>
       ${q.h?`<div class="qhint">${q.h}</div>`:""}
+      ${q.k ? `<div class="kquiz">${STROKES[q.k] ? strokeQuizSVG(q.k, q.hl) : `<span class="kbig">${esc(q.k)}</span>`}</div>` : ""}
       ${body}
       <div id="after"></div>
     </section>`;
@@ -2423,6 +2427,7 @@ function showQ(){
     markStudied(); save(); renderTop();
     const ansLine = type === "choice" ? "" : `<div class="ansshow ${right?'ok':'ng'}">${right?"正解！":"正しい答え："}<b>${esc(type==="order" ? q.w.join(" ") : q.a[0])}</b>${!right && picked ? `<small>${NAME}の答え：${esc(picked)}</small>` : ""}</div>`;
     $("after").innerHTML = `${ansLine}<div class="explain"><b>ミオの解説：</b>${q.e}</div>
+      ${q.k && STROKES[q.k] ? `<div class="korder"><div class="kgrid"><div>${strokeSVG(q.k, q.hl!=null?[q.hl]:[])}<span>${esc(q.k)}（${STROKES[q.k].p.length}画）</span></div></div><button class="linkbtn" id="kplay">▶ 書き順を見る</button></div>` : ""}
       ${STANDALONE ? "" : `<button class="askmore" id="askmore">ミオにもっとくわしく聞く</button>
       <div class="explain more" id="more" hidden></div>`}
       <button class="next" id="nx">${Q.i+1<Q.list.length?"次の問題へ →":"結果を見る！"}</button>`;
@@ -2431,6 +2436,7 @@ function showQ(){
     if (!STANDALONE && type === "choice") { const strip = t => String(t).replace(/<[^>]+>/g,"");
       reportUI(view.querySelector(".explain"), `教科：${SUBJECTS[q.subj]?SUBJECTS[q.subj].name:""}（${q.stage.t}）\n問題：${strip(q.q.replace("<u></u>","＿＿＿"))}${q.h?"（"+q.h+"）":""}\n選択肢：${q.o.join("／")}\nアプリが正解としている答え：${q.o[0]}\nアプリの解説：${strip(q.e)}`, `問題「${q.stage.t}」`); }
     $("nx").onclick = ()=>{ Q.i++; Q.i<Q.list.length ? showQ() : (Q.mode==="pt" ? placementResult() : result()); };
+    if ($("kplay")) { $("kplay").onclick = ()=>animateStrokes($("after")); setTimeout(()=>animateStrokes($("after")), 300); }
   };
 
   if (type === "choice") {
@@ -2823,6 +2829,14 @@ function strokeSVG(ch, bad=[]){
     <path d="M54.5 4 V105 M4 54.5 H105" stroke="#E3B8C6" stroke-width=".8" stroke-dasharray="3 3"/>
     ${ref.p.map((p,i)=>`<path class="ks" style="--i:${i}" d="${p}" fill="none" stroke="${col(i)}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
     ${ref.n.map(([x,y],i)=>`<text x="${x}" y="${y}" font-size="8.5" font-weight="900" fill="${bad.includes(i)?"#E5484D":"#1C1B33"}" stroke="#fff" stroke-width="2.4" paint-order="stroke">${i+1}</text>`).join("")}
+  </svg>`;
+}
+/* 「赤い線は何画目？」の問題用：その画だけ赤く、ほかはうすい灰色で見せる（番号なし） */
+function strokeQuizSVG(ch, hl){
+  const ref = STROKES[ch];
+  return `<svg class="kstroke kq" viewBox="0 0 109 109" role="img" aria-label="${esc(ch)}">
+    <path d="M54.5 4 V105 M4 54.5 H105" stroke="#E3B8C6" stroke-width=".8" stroke-dasharray="3 3"/>
+    ${ref.p.map((p,i)=>`<path d="${p}" fill="none" stroke="${i===hl?"#E5484D":"#3A3950"}" stroke-width="${i===hl?5.5:4}" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
   </svg>`;
 }
 function animateStrokes(el){
