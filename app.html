@@ -417,6 +417,12 @@ html.wlock body{position:fixed;left:0;right:0}
 .korder .kgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .korder .kgrid>div{display:flex;flex-direction:column;align-items:center;font-weight:900;font-size:13px}
 .korder .kstroke{width:min(42vw,170px);height:auto;background:#FFFDF7;border:2px solid var(--ink);border-radius:10px}
+.korder .ktabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.korder .ktab{font:inherit;font-weight:900;font-size:15px;padding:8px 14px;border:2px solid var(--ink);border-radius:999px;background:#fff;color:var(--ink)}
+.korder .ktab.on{background:#FF4F8B;color:#fff}
+.korder #kpanel{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.korder .kone{display:flex;flex-direction:column;align-items:center;font-weight:900;font-size:15px}
+.korder .kone .kstroke{width:min(70vw,260px)}
 .korder .kmsg{font-weight:900;font-size:14px;background:#FFF2C4;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;line-height:1.6}
 .korder .kmsg.ok{background:#DDF7EE}
 .kquiz{display:flex;justify-content:center;margin:8px 0}
@@ -2533,17 +2539,25 @@ function showQ(){
       const checks = chars.map((ch,k)=> perChar[k] && perChar[k].length ? checkOrder(ch, perChar[k]) : null);
       const hasRef = chars.some(ch=>STROKES[ch]);
       const okAll = checks.every(c => !c || !c.msgs.length) && checks.some(c=>c);
+      /* 書き順は1文字ずつ見る（2文字いっしょだと分かりにくいので、ボタンで切りかえ） */
+      const refIdx = chars.map((ch,k)=>STROKES[ch] ? k : -1).filter(k=>k>=0);
+      const msgOf = k => { const c = checks[k]; if (!c) return "";
+        return `<div class="kmsg ${c.msgs.length?"":"ok"}">${c.msgs.length ? "書き順チェック：<br>" + c.msgs.map(esc).join("<br>") : "書き順チェック：合っているみたい！ 👍"}</div>`; };
+      const panelOf = k => `<div class="kone">${strokeSVG(chars[k], (checks[k]&&checks[k].bad)||[])}<span>${esc(chars[k])}（${STROKES[chars[k]].p.length}画）</span></div>${msgOf(k)}`;
       const orderHTML = hasRef ? `<div class="korder">
           <b>書き順</b>
-          <div class="kgrid">${chars.map((ch,k)=>STROKES[ch] ? `<div>${strokeSVG(ch, (checks[k]&&checks[k].bad)||[])}<span>${esc(ch)}（${STROKES[ch].p.length}画）</span></div>` : "").join("")}</div>
-          ${checks.some(c=>c) ? `<div class="kmsg ${okAll?"ok":""}">${okAll ? "書き順チェック：合っているみたい！ 👍" : "書き順チェック：<br>" + checks.map((c,k)=> c && c.msgs.length ? `「${esc(chars[k])}」 ` + c.msgs.map(esc).join("、") : "").filter(Boolean).join("<br>")}</div>` : ""}
+          ${refIdx.length > 1 ? `<div class="ktabs">${refIdx.map((k,t)=>`<button class="ktab${t?"":" on"}" data-k="${k}">${k+1}文字目「${esc(chars[k])}」${checks[k] ? (checks[k].msgs.length ? " ⚠️" : " ✅") : ""}</button>`).join("")}</div>` : ""}
+          <div id="kpanel">${panelOf(refIdx[0])}</div>
           <button class="linkbtn" id="kplay">▶ 書き順を見る</button>
           <span class="pnote" style="margin:0">書き順チェックは自動なので、まちがえることもあるよ。番号は1画目・2画目…の順番。</span></div>` : "";
       box.innerHTML = `<div class="kanjians">${esc(q.a[0])}</div>${orderHTML}
         <p class="pnote" style="margin:0">自分の字と見くらべて、正直に○×をつけてね。とめ・はね・はらいも見てみよう。</p>
         <div class="grade"><button class="gbtn g1" data-g="ok">○ 書けた</button><button class="gbtn g2" data-g="almost">△ おしい</button><button class="gbtn g3" data-g="ng">× 書けなかった</button></div>`;
       $("after").before(box);
-      if ($("kplay")) { $("kplay").onclick = ()=>animateStrokes(box); setTimeout(()=>animateStrokes(box), 300); }
+      if ($("kplay")) { const kp = $("kpanel");
+        $("kplay").onclick = ()=>animateStrokes(kp); setTimeout(()=>animateStrokes(kp), 300);
+        box.querySelectorAll(".ktab").forEach(b=> b.onclick = ()=>{ box.querySelectorAll(".ktab").forEach(x=>x.classList.toggle("on", x===b));
+          kp.innerHTML = panelOf(+b.dataset.k); setTimeout(()=>animateStrokes(kp), 80); }); }
       say(hasRef && checks.some(c=>c && c.msgs.length) ? "形はどうかな？ 書き順も、番号を見てたしかめてみよう" : "答えと見くらべてみて。自分で○×をつけるのも、だいじな勉強だよ");
       box.querySelectorAll(".gbtn").forEach(g=>g.onclick=()=>{
         box.querySelectorAll(".gbtn").forEach(x=>x.disabled=true); g.classList.add("chosen");
