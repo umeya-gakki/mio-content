@@ -413,6 +413,12 @@ html.wlock body{position:fixed;left:0;right:0}
 .today .total small{color:var(--soft)}
 .msline{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:3px solid var(--ink);border-radius:14px;background:linear-gradient(90deg,#FFE27A,#FFB3CC);font-weight:900}
 .msline b{font-family:var(--display);font-size:20px}
+.korder{display:flex;flex-direction:column;align-items:center;gap:6px;margin:8px 0;width:100%}
+.korder .kgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.korder .kgrid>div{display:flex;flex-direction:column;align-items:center;font-weight:900;font-size:13px}
+.korder .kstroke{width:min(42vw,170px);height:auto;background:#FFFDF7;border:2px solid var(--ink);border-radius:10px}
+.korder .kmsg{font-weight:900;font-size:14px;background:#FFF2C4;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;line-height:1.6}
+.korder .kmsg.ok{background:#DDF7EE}
 .foot{font-size:12px;color:var(--soft);text-align:center;font-weight:700;line-height:1.7}
 .foot button{background:none;border:none;text-decoration:underline;font-size:12px;color:var(--soft);font-weight:700}
 
@@ -2466,7 +2472,7 @@ function showQ(){
     draw();
   } else if (type === "write") {
     const n = Math.max(1, Array.from(q.a[0]).length), B = 300;
-    let snap = null;
+    let snap = null, perChar = [];
     /* 書き取りモード：画面いっぱいの全画面。書いている間はページが動かないように固定する */
     const open = ()=>{
       const y = window.scrollY;
@@ -2507,17 +2513,32 @@ function showQ(){
       const close = ()=>{ window.removeEventListener("resize", fit); ov.remove();
         document.documentElement.classList.remove("wlock"); document.body.style.top = ""; window.scrollTo(0, y); };
       $("wClose").onclick = close;
-      $("padDone").onclick = ()=>{ snap = strokes.length ? cv.toDataURL("image/png") : null; close(); reveal(); };
+      $("padDone").onclick = ()=>{ snap = strokes.length ? cv.toDataURL("image/png") : null;
+        /* どのマスに書いた画かを、書き始めの位置で分ける */
+        perChar = Array.from({length:n}, ()=>[]);
+        strokes.forEach(st=>{ const k = Math.min(n-1, Math.max(0, Math.floor(st[0].y / B))); perChar[k].push(st.map(p=>({x:p.x, y:p.y - k*B}))); });
+        close(); reveal(); };
     };
     const reveal = ()=>{
       const slot = $("wslot");
       slot.innerHTML = snap ? `<div class="mywrite"><span>${NAME}の字</span><img src="${snap}" alt="書いた字"></div>` : "";
       const box = document.createElement("div"); box.className = "selfcheck";
-      box.innerHTML = `<div class="kanjians">${esc(q.a[0])}</div>
+      const chars = Array.from(q.a[0]);
+      const checks = chars.map((ch,k)=> perChar[k] && perChar[k].length ? checkOrder(ch, perChar[k]) : null);
+      const hasRef = chars.some(ch=>STROKES[ch]);
+      const okAll = checks.every(c => !c || !c.msgs.length) && checks.some(c=>c);
+      const orderHTML = hasRef ? `<div class="korder">
+          <b>書き順</b>
+          <div class="kgrid">${chars.map((ch,k)=>STROKES[ch] ? `<div>${strokeSVG(ch, (checks[k]&&checks[k].bad)||[])}<span>${esc(ch)}（${STROKES[ch].p.length}画）</span></div>` : "").join("")}</div>
+          ${checks.some(c=>c) ? `<div class="kmsg ${okAll?"ok":""}">${okAll ? "書き順チェック：合っているみたい！ 👍" : "書き順チェック：<br>" + checks.map((c,k)=> c && c.msgs.length ? `「${esc(chars[k])}」 ` + c.msgs.map(esc).join("、") : "").filter(Boolean).join("<br>")}</div>` : ""}
+          <button class="linkbtn" id="kplay">▶ 書き順を見る</button>
+          <span class="pnote" style="margin:0">書き順チェックは自動なので、まちがえることもあるよ。番号は1画目・2画目…の順番。</span></div>` : "";
+      box.innerHTML = `<div class="kanjians">${esc(q.a[0])}</div>${orderHTML}
         <p class="pnote" style="margin:0">自分の字と見くらべて、正直に○×をつけてね。とめ・はね・はらいも見てみよう。</p>
         <div class="grade"><button class="gbtn g1" data-g="ok">○ 書けた</button><button class="gbtn g2" data-g="almost">△ おしい</button><button class="gbtn g3" data-g="ng">× 書けなかった</button></div>`;
       $("after").before(box);
-      say("答えと見くらべてみて。自分で○×をつけるのも、だいじな勉強だよ");
+      if ($("kplay")) { $("kplay").onclick = ()=>animateStrokes(box); setTimeout(()=>animateStrokes(box), 300); }
+      say(hasRef && checks.some(c=>c && c.msgs.length) ? "形はどうかな？ 書き順も、番号を見てたしかめてみよう" : "答えと見くらべてみて。自分で○×をつけるのも、だいじな勉強だよ");
       box.querySelectorAll(".gbtn").forEach(g=>g.onclick=()=>{
         box.querySelectorAll(".gbtn").forEach(x=>x.disabled=true); g.classList.add("chosen");
         finish(g.dataset.g === "ok", g.dataset.g === "ok" ? "" : "（手書き）", g.dataset.g);
@@ -2735,6 +2756,80 @@ function parentView(){
 
 
 /* ---------- 教材データの読み込み ---------- */
+/* 書き順のデータ（KanjiVG〔CC BY-SA 3.0〕をもとにした strokes.json）。なくてもアプリは動く */
+let STROKES = {};
+async function loadStrokes(){
+  for (const u of CONTENT_URLS) {
+    try { const r = await fetch(u.replace(/content\.json.*$/, "strokes.json") + "?t=" + Date.now(), {cache:"no-store"});
+      if (r.ok) { const j = await r.json(); if (j && j.kanji) { STROKES = j.kanji; try { localStorage.setItem(KEY+"-strokes", JSON.stringify(j.kanji)); } catch(e){} return; } } } catch(e){}
+  }
+  try { STROKES = JSON.parse(localStorage.getItem(KEY+"-strokes") || "{}") || {}; } catch(e){}
+}
+/* 手本の1画を「始点・中間・終点」の3点にする（109×109 の座標） */
+let _probe = null;
+function refPts(d){
+  if (!_probe) { const sv = document.createElementNS("http://www.w3.org/2000/svg", "svg"); sv.setAttribute("width","0"); sv.setAttribute("height","0"); sv.style.position = "absolute"; sv.style.visibility = "hidden";
+    _probe = document.createElementNS("http://www.w3.org/2000/svg", "path"); sv.appendChild(_probe); document.body.appendChild(sv); }
+  _probe.setAttribute("d", d); const L = _probe.getTotalLength();
+  const at = t => { const p = _probe.getPointAtLength(L*t); return {x:p.x, y:p.y}; }; return [at(0), at(0.5), at(1)]; }
+/* 書き順チェック：1文字分の画（点の列）と手本をくらべる。ゆるめに判定する */
+function checkOrder(ch, user){
+  const ref = STROKES[ch]; if (!ref) return null;
+  const R = ref.p.map(refPts);
+  const res = {ch, need: R.length, got: user.length, msgs: [], bad: []};
+  if (!user.length) return res;
+  if (user.length !== R.length) res.msgs.push(`画数が${user.length}画になっているよ（正しくは${R.length}画）`);
+  /* 大きさと位置をそろえる：手本と自分の字を、それぞれの外わくで0〜1に直す */
+  const box = pts => { let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; pts.forEach(p=>{ x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); });
+    const sc = Math.max(x1-x0, y1-y0, 1e-6); return p => ({x:(p.x-x0)/sc, y:(p.y-y0)/sc}); };
+  const nr = box(R.flat()), Rn = R.map(a=>a.map(nr));
+  const U = user.map(st => { const L = st.length; return [st[0], st[Math.floor((L-1)/2)], st[L-1]]; });
+  const nu = box(user.flat()), Un = U.map(a=>a.map(nu));
+  const d = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+  const cost = (u,r) => d(u[0],r[0]) + d(u[2],r[2]) + 0.5*d(u[1],r[1]);
+  const rev  = (u,r) => d(u[0],r[2]) + d(u[2],r[0]) + 0.5*d(u[1],r[1]);
+  /* 画数が同じときは、全体でいちばん合う組み合わせ（割り当て）を求め、手本の順番とくらべる */
+  const nU = Un.length, nR = Rn.length;
+  for (let i=0; i<Math.min(nU,nR); i++) {
+    const tiny = d(Rn[i][0], Rn[i][2]) < 0.12;
+    if (!tiny && rev(Un[i], Rn[i]) + 0.2 < cost(Un[i], Rn[i]) && rev(Un[i], Rn[i]) < 0.6) { res.msgs.push(`${i+1}画目の書く向きが逆かも（始まりと終わりを確かめよう）`); res.bad.push(i); }
+  }
+  if (nU === nR) {
+    const M = Un.map(u => Rn.map(r => Math.min(cost(u,r), rev(u,r) + 0.05)));
+    const asg = hungarian(M);
+    const idSum = M.reduce((a,row,i)=>a+row[i],0), opSum = asg.reduce((a,j,i)=>a+M[i][j],0);
+    if (idSum - opSum > 0.35) {
+      for (let i=0; i<nU; i++) if (asg[i] !== i && M[i][i] - M[i][asg[i]] > 0.15 && !res.bad.includes(i)) {
+        res.msgs.push(`${i+1}画目に、手本の${asg[i]+1}画目の線を書いているみたい`); res.bad.push(i); }
+    }
+  }
+  return res;
+}
+function hungarian(C){
+  const n = C.length, INF = 1e9, u = Array(n+1).fill(0), v = Array(n+1).fill(0), p = Array(n+1).fill(0), way = Array(n+1).fill(0);
+  for (let i=1;i<=n;i++){ p[0]=i; let j0=0; const minv=Array(n+1).fill(INF), used=Array(n+1).fill(false);
+    do { used[j0]=true; const i0=p[j0]; let delta=INF, j1=0;
+      for (let j=1;j<=n;j++) if(!used[j]){ const cur=C[i0-1][j-1]-u[i0]-v[j]; if(cur<minv[j]){minv[j]=cur; way[j]=j0;} if(minv[j]<delta){delta=minv[j]; j1=j;} }
+      for (let j=0;j<=n;j++){ if(used[j]){u[p[j]]+=delta; v[j]-=delta;} else minv[j]-=delta; }
+      j0=j1; } while(p[j0]!==0);
+    do { const j1=way[j0]; p[j0]=p[j1]; j0=j1; } while(j0); }
+  const a = Array(n); for (let j=1;j<=n;j++) a[p[j]-1]=j-1; return a;
+}
+/* 書き順の手本：1画ずつ色分けし、始まりに番号をつける。「書き順を見る」で順に書いて見せる */
+function strokeSVG(ch, bad=[]){
+  const ref = STROKES[ch]; if (!ref) return "";
+  const col = i => bad.includes(i) ? "#E5484D" : `hsl(${Math.round(220 - 200*i/Math.max(1,ref.p.length-1))} 70% 42%)`;
+  return `<svg class="kstroke" viewBox="0 0 109 109" role="img" aria-label="${esc(ch)}の書き順">
+    <path d="M54.5 4 V105 M4 54.5 H105" stroke="#E3B8C6" stroke-width=".8" stroke-dasharray="3 3"/>
+    ${ref.p.map((p,i)=>`<path class="ks" style="--i:${i}" d="${p}" fill="none" stroke="${col(i)}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
+    ${ref.n.map(([x,y],i)=>`<text x="${x}" y="${y}" font-size="8.5" font-weight="900" fill="${bad.includes(i)?"#E5484D":"#1C1B33"}" stroke="#fff" stroke-width="2.4" paint-order="stroke">${i+1}</text>`).join("")}
+  </svg>`;
+}
+function animateStrokes(el){
+  el.querySelectorAll(".kstroke").forEach(svg=>{ const ps = [...svg.querySelectorAll(".ks")];
+    ps.forEach((p,i)=>{ const L = p.getTotalLength(); p.style.transition = "none"; p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      p.getBoundingClientRect(); p.style.transition = `stroke-dashoffset .45s ease ${i*0.55}s`; p.style.strokeDashoffset = 0; }); });
+}
 async function loadContent(){
   for (const u of CONTENT_URLS) {
     try {
@@ -2746,6 +2841,7 @@ async function loadContent(){
   return null;
 }
 function applyContent(c){
+  if (!Object.keys(STROKES).length) loadStrokes();
   c = JSON.parse(JSON.stringify(c).split("{name}").join(NAME));
   SUBJECTS = c.subjects; SUBJ_ORDER = c.order; SUBJ_STYLE = c.style;
   for (const k in ALLQ) delete ALLQ[k];

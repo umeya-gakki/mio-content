@@ -14,3 +14,7 @@
 ## app.html（アプリ本体）
 ミオと放課後クエストのアプリ本体です。サーバー（uvision.jp/mio-k7q3/）の index.html は入り口だけで、ここにある app.html を読み込んで動きます。
 改良は app.html を直して push すれば、数分で届きます。push の前に、必ず手元で動作確認をすること。
+
+## strokes.json（漢字の書き順）
+書き取り問題の漢字の書き順データです。KanjiVG（Ulrich Apel 作、CC BY-SA 3.0、http://kanjivg.tagaini.net）をもとに作成しています。このファイルは CC BY-SA 3.0 で提供します。
+書き取り（type: write）の問題を足したら、その漢字のデータも strokes.json に足すこと。
