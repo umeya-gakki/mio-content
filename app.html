@@ -329,7 +329,22 @@ body.wp-note,.wpv-note{background-color:#EEF6FF;background-image:radial-gradient
 .tile:disabled{opacity:.3;box-shadow:none}
 .ordline .tile:disabled{opacity:1}
 .wbox{margin-top:14px;display:flex;justify-content:center}
-.pad{width:min(100%, 520px);height:auto;max-height:200px;border:3px solid var(--ink);border-radius:12px;background:#FFFDF7;touch-action:none;display:block}
+.pad{border:3px solid var(--ink);border-radius:12px;background:#FFFDF7;touch-action:none;display:block;max-width:100%;-webkit-user-select:none;user-select:none}
+/* 書き取りモード（全画面・スクロールしない） */
+html.wlock,html.wlock body{overflow:hidden;overscroll-behavior:none}
+html.wlock body{position:fixed;left:0;right:0}
+.wover{position:fixed;inset:0;z-index:50;background:var(--paper,#FFF8EE);display:flex;flex-direction:column;gap:6px;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px));
+  touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.wover .whead{display:flex;gap:8px;align-items:flex-start}
+.wover .wq{flex:1;min-width:0;font-weight:900;font-size:16px;line-height:1.5}
+.wover .wx{flex:none;font:900 13px inherit;border:2px solid var(--ink);border-radius:999px;background:#fff;padding:4px 12px}
+.wover .wsub{font-size:12px;font-weight:900;color:var(--soft)}
+.wover .wpadwrap{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start}
+.wover .wbtns{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:6px}
+.wover .wbtns .next{margin:0;padding:12px 4px;font-size:15px}
+.mywrite{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:900;font-size:13px;margin-top:10px}
+.mywrite img{width:120px;border:2px solid var(--ink);border-radius:10px;background:#FFFDF7}
 .selfcheck{margin-top:12px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
 .kanjians{font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:64px;font-weight:700;line-height:1.1;border:3px solid var(--ink);border-radius:12px;padding:6px 18px;background:#fff;letter-spacing:.1em}
 .grade{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -2365,9 +2380,7 @@ function showQ(){
       <div class="row" style="margin-top:10px"><button class="next ghost" id="ordReset">やり直す</button><button class="next" id="ansGo" disabled>答える</button></div>`;
   } else if (type === "write") {
     const n = Math.max(1, Array.from(q.a[0]).length);
-    body = `<div class="wbox"><canvas id="pad" class="pad" width="${n*150}" height="150" style="aspect-ratio:${n}/1" aria-label="ここに指で書いてね"></canvas></div>
-      <p class="pnote" style="margin:6px 0 0">指で書いてね。ノートに書いてからでもOK！</p>
-      <div class="row" style="margin-top:10px"><button class="next ghost" id="padClear">消す</button><button class="next" id="ansGo">答えを見る</button></div>`;
+    body = `<div id="wslot" class="wslot"><button class="next" id="wOpen">✏️ 書き取りをはじめる（${n}文字）</button></div>`;
   }
   view.innerHTML = `
     <div class="qtop"><button class="back" id="quit">やめる</button>
@@ -2452,25 +2465,53 @@ function showQ(){
     };
     draw();
   } else if (type === "write") {
-    const cv = $("pad"), ctx = cv.getContext("2d");
-    const n = cv.width / 150;
-    const grid = ()=>{
-      ctx.clearRect(0,0,cv.width,cv.height);
-      ctx.strokeStyle = "#E3B8C6"; ctx.lineWidth = 2; ctx.setLineDash([8,8]);
-      for (let k=0;k<n;k++){ const x0=k*150; ctx.beginPath(); ctx.moveTo(x0+75,8); ctx.lineTo(x0+75,142); ctx.moveTo(x0+8,75); ctx.lineTo(x0+142,75); ctx.stroke(); }
-      ctx.setLineDash([]); ctx.strokeStyle = "#1C1B33"; ctx.lineWidth = 3;
-      for (let k=1;k<n;k++){ ctx.beginPath(); ctx.moveTo(k*150,0); ctx.lineTo(k*150,150); ctx.stroke(); }
+    const n = Math.max(1, Array.from(q.a[0]).length), B = 300;
+    let snap = null;
+    /* 書き取りモード：画面いっぱいの全画面。書いている間はページが動かないように固定する */
+    const open = ()=>{
+      const y = window.scrollY;
+      document.documentElement.classList.add("wlock"); document.body.style.top = (-y) + "px";
+      const ov = document.createElement("div"); ov.className = "wover"; ov.id = "wover";
+      ov.innerHTML = `<div class="whead"><div class="wq">${q.q}</div><button class="wx" id="wClose" aria-label="とじる">とじる</button></div>
+        <div class="wsub">${n>1?`${n}文字 ・ 上から順に1マス1文字`:"マスいっぱいに大きく"}</div>
+        <div class="wpadwrap"><canvas id="pad" class="pad" width="${B}" height="${n*B}" aria-label="ここに指で書いてね"></canvas></div>
+        <div class="wbtns"><button class="next ghost" id="padUndo">1画もどす</button><button class="next ghost" id="padClear">ぜんぶ消す</button><button class="next" id="padDone">書けた！</button></div>`;
+      document.body.appendChild(ov);
+      ov.addEventListener("touchmove", e=>e.preventDefault(), {passive:false});
+      const cv = $("pad"), ctx = cv.getContext("2d");
+      const fit = ()=>{ const wrap = ov.querySelector(".wpadwrap"); const w = wrap.clientWidth - 8, h = wrap.clientHeight - 8;
+        const sz = Math.max(120, Math.min(w, h / n)); cv.style.width = sz + "px"; cv.style.height = (sz * n) + "px"; };
+      fit(); window.addEventListener("resize", fit);
+      const strokes = []; let cur = null;
+      const grid = ()=>{
+        ctx.clearRect(0,0,cv.width,cv.height);
+        for (let k=0;k<n;k++){ const y0 = k*B;
+          ctx.strokeStyle = "#E3B8C6"; ctx.lineWidth = 2.5; ctx.setLineDash([12,12]);
+          ctx.beginPath(); ctx.moveTo(B/2, y0+12); ctx.lineTo(B/2, y0+B-12); ctx.moveTo(12, y0+B/2); ctx.lineTo(B-12, y0+B/2); ctx.stroke();
+          ctx.setLineDash([]);
+          if (n > 1) { ctx.fillStyle = "#C9A9B6"; ctx.font = "bold 22px sans-serif"; ctx.fillText(String(k+1), 10, y0+28); }
+        }
+        ctx.strokeStyle = "#1C1B33"; ctx.lineWidth = 4;
+        for (let k=1;k<n;k++){ ctx.beginPath(); ctx.moveTo(0, k*B); ctx.lineTo(B, k*B); ctx.stroke(); }
+      };
+      const paint = ()=>{ grid(); ctx.strokeStyle="#1C1B33"; ctx.lineWidth=15; ctx.lineCap="round"; ctx.lineJoin="round";
+        for (const st of strokes) { ctx.beginPath(); st.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); if (st.length===1) ctx.lineTo(st[0].x+0.1, st[0].y); ctx.stroke(); } };
+      paint();
+      const pos = e=>{ const r = cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height }; };
+      cv.addEventListener("pointerdown", e=>{ cur = [pos(e)]; strokes.push(cur); cv.setPointerCapture(e.pointerId); e.preventDefault(); paint(); });
+      cv.addEventListener("pointermove", e=>{ if (!cur) return; cur.push(pos(e)); paint(); e.preventDefault(); });
+      const stop = ()=>{ cur = null; };
+      cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
+      $("padUndo").onclick = ()=>{ strokes.pop(); paint(); };
+      $("padClear").onclick = ()=>{ strokes.length = 0; paint(); };
+      const close = ()=>{ window.removeEventListener("resize", fit); ov.remove();
+        document.documentElement.classList.remove("wlock"); document.body.style.top = ""; window.scrollTo(0, y); };
+      $("wClose").onclick = close;
+      $("padDone").onclick = ()=>{ snap = strokes.length ? cv.toDataURL("image/png") : null; close(); reveal(); };
     };
-    grid();
-    let drawing = false, last = null;
-    const pos = e=>{ const r = cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height }; };
-    cv.addEventListener("pointerdown", e=>{ drawing = true; last = pos(e); cv.setPointerCapture(e.pointerId); e.preventDefault(); });
-    cv.addEventListener("pointermove", e=>{ if (!drawing) return; const p = pos(e); ctx.strokeStyle="#1C1B33"; ctx.lineWidth=9; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last = p; e.preventDefault(); });
-    const stop = ()=>{ drawing = false; };
-    cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
-    $("padClear").onclick = grid;
-    $("ansGo").onclick = ()=>{
-      $("padClear").disabled = true; $("ansGo").remove();
+    const reveal = ()=>{
+      const slot = $("wslot");
+      slot.innerHTML = snap ? `<div class="mywrite"><span>${NAME}の字</span><img src="${snap}" alt="書いた字"></div>` : "";
       const box = document.createElement("div"); box.className = "selfcheck";
       box.innerHTML = `<div class="kanjians">${esc(q.a[0])}</div>
         <p class="pnote" style="margin:0">自分の字と見くらべて、正直に○×をつけてね。とめ・はね・はらいも見てみよう。</p>
@@ -2482,6 +2523,8 @@ function showQ(){
         finish(g.dataset.g === "ok", g.dataset.g === "ok" ? "" : "（手書き）", g.dataset.g);
       });
     };
+    $("wOpen").onclick = open;
+    open();
   }
 }
 function popup(t){
