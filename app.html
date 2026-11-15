@@ -1612,11 +1612,11 @@ function boostInfo(){
   return {nx, d, phase, first: ms.find(m=>m.kind==="first") || null, final: ms.find(m=>m.kind==="final") || null};
 }
 /* テスト範囲（入っていなければ「いまココ？」の単元で代わりにする） */
+/* テスト範囲：KOUちゃんが入れた範囲＋ミオ先生が授業の進みから予想した単元（「いまココ？」）を合わせる */
 function boostRange(nx){
   const r = rangeIds(nx).filter(id=>stageById(id));
-  if (r.length) return r;
-  const out = []; SUBJ_ORDER.forEach(k=>SUBJECTS[k].stages.forEach(st=>{ if (st.now) out.push(st.id); }));
-  return out.length ? out : SUBJ_ORDER.flatMap(k=>SUBJECTS[k].stages.slice(0,3).map(st=>st.id));
+  const out = new Set(r); SUBJ_ORDER.forEach(k=>SUBJECTS[k].stages.forEach(st=>{ if (st.now) out.add(st.id); }));
+  return out.size ? [...out] : SUBJ_ORDER.flatMap(k=>SUBJECTS[k].stages.slice(0,3).map(st=>st.id));
 }
 function mockMissStages(b){ const m = b && (b.final || b.first); return m ? m.miss || [] : []; }
 function buildMock(nx){
@@ -1917,7 +1917,7 @@ function buildMix(){
   const add = (q, tag) => { if (q && !used.has(q.id)) { used.add(q.id); list.push(q); parts[tag] = (parts[tag]||0) + 1; return true; } return false; };
   const sc = (S.placed && S.placed.scores) || {};
   const nx = nextTest(); const near = nx && daysUntil(nx.date) <= 21;
-  const range = new Set(near ? rangeIds(nx) : []);
+  const range = new Set(near ? boostRange(nx) : []);
   const plan = new Set(PLAN && Array.isArray(PLAN.focus) ? PLAN.focus : []);
   const weak = weakStages().map(w=>w.id);
   const wrongBy = {}; Object.keys(S.wrong).forEach(id=>{ const q=ALLQ[id]; if (q) (wrongBy[q.subj]=wrongBy[q.subj]||[]).push(q); });
