@@ -892,6 +892,7 @@ let SUBJ_STYLE = {};
 let RANKS = [];
 let LINES = {};
 let ENGLISH = null;
+let TESTFIX = [];
 let PLAN = null;
 /* Claudeの外（Dropboxなど）で開く版では true にして書き出す */
 const STANDALONE = true;
@@ -2239,7 +2240,23 @@ function rollRare(){
   S.surprise = {day: t, look};
   save();
 }
+/* ミオ先生が範囲表などで確かめたテストの日付・範囲を、KOUちゃんのテストに反映する（1回だけ） */
+function applyTestFix(){
+  if (ROLE !== "kid" || (SERVER && !cloudOK) || !TESTFIX.length || !S.tests) return;
+  let changed = false; S.testFixed = S.testFixed || [];
+  for (const f of TESTFIX) for (const t of S.tests) {
+    const key = t.id + ">" + f.date;
+    if (S.testFixed.includes(key) || !String(t.name||"").includes(f.match)) continue;
+    if (!(f.from||[]).includes(t.date) && t.date !== f.date) continue;
+    t.date = f.date;
+    const has = t.range && Object.values(t.range).some(a => a && a.length);
+    if (!has && f.range) t.range = JSON.parse(JSON.stringify(f.range));
+    S.testFixed.push(key); changed = true;
+  }
+  if (changed) save();
+}
 function applyStage(){
+  applyTestFix();
   rollRare();
   setLook(mio, stageIdx(curLv()));
   const r = rareToday(), b = ROLE !== "family" && boostInfo();
@@ -2658,7 +2675,7 @@ function applyContent(c){
   for (const k in ALLQ) delete ALLQ[k];
   for (const sk in SUBJECTS) SUBJECTS[sk].stages.forEach(st => { st.subj = sk; st.qs.forEach(q => { q.stage = st; q.subj = sk; ALLQ[q.id] = q; }); });
   PT = c.placement; PT.forEach(q => { q.stage = PT_STAGE; ALLQ[q.id] = q; });
-  RANKS = c.ranks; LINES = c.lines; ENGLISH = c.english || null; ADVICE = c.advice; INTRO = c.intro; GROW = c.grow;
+  RANKS = c.ranks; LINES = c.lines; ENGLISH = c.english || null; TESTFIX = Array.isArray(c.testFix) ? c.testFix : []; ADVICE = c.advice; INTRO = c.intro; GROW = c.grow;
   LV_ITEMS = c.lvItems; STREAK_ITEMS = c.streakItems; SPECIAL_ITEMS = c.specialItems || {}; TPRESETS = c.testPresets || [];
   CONTENT_VERSION = c.version || "";
 }
