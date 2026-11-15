@@ -385,6 +385,18 @@ html.wlock body{position:fixed;left:0;right:0}
 .nobi .up{color:#E5484D;font-size:12px}
 .nobi ul{margin:4px 0 0;padding-left:1.2em;font-size:14px;line-height:1.7}
 .pkind,.psubj{display:flex;flex-wrap:wrap;gap:6px}
+.letterbtn.todo{background:linear-gradient(160deg,#fff 40%,#FFD3E2);border-color:#FF4F8B;animation:ltpulse 1.6s ease-in-out infinite}
+@keyframes ltpulse{50%{transform:scale(1.02)}}
+.lttext{width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.6;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#FFFDF7;color:var(--ink);resize:vertical}
+.ltcount{text-align:right;font-size:12px;font-weight:700;color:var(--soft)}
+.ltlist{display:flex;flex-direction:column;gap:14px;margin-top:10px}
+.ltpair{display:flex;flex-direction:column;gap:6px}
+.ltme{align-self:flex-end;max-width:85%;background:#E4EEFF;border:2px solid var(--ink);border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:15px;line-height:1.6;word-break:break-word}
+.ltd{display:block;font-size:11px;color:var(--soft);font-weight:700}
+.ltmio{align-self:flex-start;max-width:85%;background:#FFF0F5;border:2px solid var(--ink);border-radius:14px 14px 14px 4px;padding:8px 12px;font-size:15px;line-height:1.7;word-break:break-word}
+.ltmio b{display:block;color:#FF4F8B;font-size:13px}
+.ltmio.new{background:#FFE0EB}
+.ltwait{align-self:flex-start;font-size:13px;font-weight:700;color:var(--soft)}
 .shots{display:flex;flex-wrap:wrap;gap:6px}
 .shots img{width:30%;max-width:120px;aspect-ratio:3/4;object-fit:cover;border:2px solid var(--ink);border-radius:8px}
 .pgrow{display:grid;grid-template-columns:3.2em auto 1fr auto 1fr;gap:6px;align-items:center;font-weight:900}
@@ -1185,6 +1197,62 @@ function photoView(){
   };
   draw();
   say("見せたいもの、なんでも送ってね", "happy");
+}
+/* ミオへの手紙：KOUちゃんが自由に書く → 夜の見守りでミオ（Claude）が返事を書く → 次に開いたとき届く */
+let LETTERS = null, letterMsgShown = false;
+const unreadReplies = () => (LETTERS||[]).filter(l => l.reply && !l.readAt);
+async function fetchLetters(){
+  if (!SERVER || ROLE !== "kid" || !FAMKEY) return;
+  try { const j = await api("myletters"); if (j.ok) LETTERS = j.letters || []; } catch(e){}
+  if (screen === "home") paintLetterBtn(true);
+}
+function paintLetterBtn(fromFetch){
+  const b = $("letterBtn"); if (!b || LETTERS === null) return; b.hidden = false;
+  const n = unreadReplies().length, wait = (LETTERS||[]).filter(l=>!l.reply).length;
+  b.classList.toggle("todo", n > 0);
+  b.querySelector(".lsub").textContent = n ? `ミオからお返事がとどいてるよ！（${n}通）` : wait ? "お返事は夜に書くね。楽しみに待っててね" : "なんでも話しかけてね。お返事は夜にとどくよ";
+  b.querySelector(".q").textContent = n ? "💌" : "✉️";
+  if (fromFetch && n && !letterMsgShown) { letterMsgShown = true; say(`${NAME}、お手紙のお返事を書いたよ！ 読んでみてね`, "happy"); }
+}
+function fmtLetterDate(iso){ const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function letterView(){
+  screen = "letter";
+  const draw = (note) => {
+    const list = LETTERS || [];
+    view.innerHTML = `<section class="panel qcard form"><span class="qlabel">ミオへの手紙</span>
+      <p class="introtext">学校のこと、部活のこと、ガンプラのこと、なやみごと…なんでも書いてね。ミオが夜にお返事を書くよ。</p>
+      <textarea id="ltText" class="lttext" maxlength="400" rows="5" placeholder="ミオへ"></textarea>
+      <div class="ltcount"><span id="ltN">0</span> / 400</div>
+      <p class="perr" id="ltErr" hidden></p>
+      ${note ? `<div class="feverline">${note}</div>` : ""}
+      <button class="next" id="ltSend">ミオに送る</button>
+      <button class="next ghost" id="ltBack">もどる</button>
+      ${list.length ? `<div class="ltlist">${list.map(l=>`<div class="ltpair">
+          <div class="ltme"><span class="ltd">${fmtLetterDate(l.at)}</span>${esc(l.text).replace(/\n/g,"<br>")}</div>
+          ${l.reply ? `<div class="ltmio ${l.readAt?"":"new"}"><b>ミオより${l.readAt?"":" 🆕"}</b>${esc(l.reply).replace(/\n/g,"<br>")}</div>`
+                    : `<div class="ltwait">ミオがお返事を考えているところ… 夜にとどくよ</div>`}
+        </div>`).join("")}</div>` : ""}
+    </section>`;
+    $("ltBack").onclick = home;
+    $("ltText").oninput = () => { $("ltN").textContent = $("ltText").value.length; };
+    $("ltSend").onclick = async () => {
+      const text = $("ltText").value.trim();
+      if (!text) { $("ltErr").textContent = "ひとことでも書いてね"; $("ltErr").hidden = false; return; }
+      $("ltSend").disabled = true; $("ltSend").textContent = "送っています…";
+      const j = await api("letter", {text}).catch(()=>({ok:false, error:"offline"}));
+      if (!j.ok) { $("ltErr").textContent = j.error==="too_many_today" ? "今日はたくさん書いてくれたね！ 続きはまた明日" : j.error==="offline" ? "送れなかった…電波のよいところで、もう一度ためしてね" : "送れなかった…（" + j.error + "）"; $("ltErr").hidden = false; $("ltSend").disabled = false; $("ltSend").textContent = "ミオに送る"; return; }
+      LETTERS = [{id:j.id, at:new Date().toISOString(), text, reply:null, replyAt:null, readAt:null}].concat(LETTERS||[]);
+      const gain = !(S.letterDays||[]).includes(dayStr()) ? 10 : 0;
+      if (gain) { S.letterDays = (S.letterDays||[]).concat(dayStr()).slice(-60); S.xp += gain; save(); }
+      draw(gain ? `お手紙ボーナス +${gain} XP` : "");
+      say("お手紙ありがとう！ ちゃんととどいたよ。お返事、夜に書くね", "happy");
+    };
+    const ids = unreadReplies().map(l=>l.id);
+    if (ids.length) { const now = new Date().toISOString(); (LETTERS||[]).forEach(l=>{ if (ids.includes(l.id)) l.readAt = now; }); api("letterread", {ids}).catch(()=>{}); }
+  };
+  draw("");
+  if (LETTERS === null) fetchLetters().then(()=>{ if (screen === "letter") draw(""); });
+  say(unreadReplies().length ? "お返事、読んでくれたらうれしいな" : "なんでも話しかけてね。ミオ、楽しみに待ってる！", "happy");
 }
 function familyNotice(){
   screen = "fam";
@@ -2161,6 +2229,7 @@ function home(){
     ${STANDALONE ? "" : `<button class="panel askbtn" id="askBtn"><span class="q">？</span><span><b>ミオ先生に質問</b><br><span>わからないところを、文字や写真で聞けるよ</span></span></button>`}
     ${SERVER && ROLE === "kid" ? (()=>{ const pg = (S.log && S.log[dayStr()] && S.log[dayStr()].pg) || null; const n = pg ? Object.keys(pg).length : 0;
       return `<button class="panel askbtn pgbtn ${n?"":"todo"}" id="pageBtn"><span class="q">📖</span><span><b>今日習ったページをミオに教える</b><br><span>${n ? `今日は${n}教科教えてくれたよ。ありがとう！` : "ミオがテストに出るところを予想するよ"}</span></span></button>`; })() : ""}
+    ${SERVER && ROLE === "kid" ? `<button class="panel askbtn letterbtn" id="letterBtn" hidden><span class="q">✉️</span><span><b>ミオに手紙を書く</b><br><span class="lsub">なんでも話しかけてね。お返事は夜にとどくよ</span></span></button>` : ""}
     ${SERVER && ROLE === "kid" ? `<button class="panel askbtn" id="photoBtn"><span class="q">📷</span><span><b>ミオ先生に写真を送る</b><br><span>なんでも見せてね</span></span></button>` : ""}
     ${wrongN ? `<button class="panel review" id="rev"><span><b>まちがい復習</b><br><span>前にまちがえた問題にリベンジ！</span></span><span class="count">${wrongN}</span></button>` : ""}
   `;
@@ -2169,6 +2238,7 @@ function home(){
   view.querySelectorAll(".subj").forEach(b=>b.onclick=()=>stageMap(b.dataset.s));
   if ($("askBtn")) $("askBtn").onclick = ()=>askView();
   if ($("photoBtn")) $("photoBtn").onclick = ()=>photoView();
+  if ($("letterBtn")) { $("letterBtn").onclick = ()=>letterView(); if (LETTERS === null) fetchLetters(); else paintLetterBtn(false); }
   if ($("pageBtn")) $("pageBtn").onclick = ()=>pageView();
   $("todayBtn").onclick = gachaStart;
   bindWeakCard();
