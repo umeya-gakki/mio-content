@@ -1501,7 +1501,9 @@ function hobbyLine(){
   return pick(HOBBY).replaceAll("{name}", NAME).replaceAll("{total}", t.toLocaleString()).replaceAll("{days}", String(S.days||0));
 }
 function greet(){
-  if (S.absentGreet) { S.absentGreet = 0; save(); say(`${NAME}、体はだいじょうぶ？ テストのことは気にしないで、いまはゆっくり休んでね。ここまでがんばった力は、ちゃんと${NAME}の中に残ってるよ`, "happy"); return; }
+  /* 病気でテストを休んだあと：1回目は休むことを優先、別の日に開いたら「期末で成果を出そう」 */
+  if (S.absentGreet === 1) { S.absentGreet = 2; S.absentDay = dayStr(); save(); say(`${NAME}、体はだいじょうぶ？ テストのことは気にしないで、いまはゆっくり休んでね。ここまでがんばった力は、ちゃんと${NAME}の中に残ってるよ`, "happy"); return; }
+  if (S.absentGreet === 2 && S.absentDay !== dayStr()) { S.absentGreet = 0; save(); say(`元気になってきた？ 次は期末テストで成果を出そう！ 「ミオと一緒にやってから、こんなに点数が上がったよ」って、お父さんとお母さんに言えるようにしようね。毎日続けた分だけ、ちゃんと力になってるよ`, "happy"); return; }
   const gap = daysSince(S.lastDay);
   const bi = boostInfo();
   if (bi && (gap === null || gap <= 1)) { say(boostLine(bi), "happy"); return; }
