@@ -1501,6 +1501,7 @@ function hobbyLine(){
   return pick(HOBBY).replaceAll("{name}", NAME).replaceAll("{total}", t.toLocaleString()).replaceAll("{days}", String(S.days||0));
 }
 function greet(){
+  if (S.absentGreet) { S.absentGreet = 0; save(); say(`${NAME}、体はだいじょうぶ？ テストのことは気にしないで、いまはゆっくり休んでね。ここまでがんばった力は、ちゃんと${NAME}の中に残ってるよ`, "happy"); return; }
   const gap = daysSince(S.lastDay);
   const bi = boostInfo();
   if (bi && (gap === null || gap <= 1)) { say(boostLine(bi), "happy"); return; }
@@ -1817,8 +1818,8 @@ let TPRESETS = [];
 const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 function daysUntil(date){ const [y,m,d]=date.split("-").map(Number); const t=new Date(y,m-1,d), n=new Date(); n.setHours(0,0,0,0); return Math.round((t-n)/86400000); }
 const jdate = date => { const [y,m,d]=date.split("-").map(Number); return `${m}月${d}日`; };
-function nextTest(){ return (S.tests||[]).filter(t=>daysUntil(t.date)>=0).sort((a,b)=>a.date<b.date?-1:1)[0] || null; }
-function pendingResult(){ return (S.tests||[]).filter(t=>daysUntil(t.date)<0 && !t.results).sort((a,b)=>a.date<b.date?1:-1)[0] || null; }
+function nextTest(){ return (S.tests||[]).filter(t=>!t.absent && daysUntil(t.date)>=0).sort((a,b)=>a.date<b.date?-1:1)[0] || null; }
+function pendingResult(){ return (S.tests||[]).filter(t=>!t.absent && daysUntil(t.date)<0 && !t.results).sort((a,b)=>a.date<b.date?1:-1)[0] || null; }
 function rangeIds(t){ return t && t.range ? Object.values(t.range).flat() : []; }
 function stageAcc(id, days=30){ const log=S.log||{}; let n=0,ok=0; for(let i=0;i<days;i++){ const d=new Date(); d.setDate(d.getDate()-i); const L=log[dayStr(d)]; if(L&&L.st&&L.st[id]){ n+=L.st[id][0]; ok+=L.st[id][1]; } } return n?{n,acc:Math.round(ok/n*100)}:{n:0,acc:null}; }
 function pickRangeStage(t){
@@ -2543,7 +2544,12 @@ function rollRare(){
 function applyTestFix(){
   if (ROLE !== "kid" || (SERVER && !cloudOK) || !TESTFIX.length || !S.tests) return;
   let changed = false; S.testFixed = S.testFixed || [];
+  let absentNew = false;
   for (const f of TESTFIX) for (const t of S.tests) {
+    /* 病気などで受けられないテスト：特訓モードと秒読みを止める（保護者から連絡があったとき、教材の testFix で指定） */
+    if (f.absent) { const ak = t.id + ">absent";
+      if (!S.testFixed.includes(ak) && String(t.name||"").includes(f.match) && t.date === f.date) { t.absent = true; S.testFixed.push(ak); changed = true; absentNew = true; }
+      continue; }
     const key = t.id + ">" + f.date;
     if (S.testFixed.includes(key) || !String(t.name||"").includes(f.match)) continue;
     if (!(f.from||[]).includes(t.date) && t.date !== f.date) continue;
@@ -2553,6 +2559,7 @@ function applyTestFix(){
     S.testFixed.push(key); changed = true;
   }
   if (changed) save();
+  if (absentNew) { S.absentGreet = 1; save(); }
 }
 function applyStage(){
   applyTestFix();
